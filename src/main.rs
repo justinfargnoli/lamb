@@ -1,3 +1,7 @@
+use std::env;
+
 fn main() {
-    println!("Hello, world!");
+    let input_file = env::args().nth(1).expect("Usage: & tc <input file>");
+
+    // call the run function from lib.rs
 }
