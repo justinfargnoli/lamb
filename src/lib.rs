@@ -1,3 +1,9 @@
+mod read;
+mod lex;
+mod parse;
+mod type_check;
+
+
 #[cfg(test)]
 mod tests {
     #[test]
