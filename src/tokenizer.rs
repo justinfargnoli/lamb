@@ -6,11 +6,11 @@ pub enum Token {
     ParenLeft,
     ParenRight,
     Comma,
-    Quotes,
+    Quote,
     ID(String),
     Number(u32),
-    TTrueC,
-    TFalseC,
+    TTrue,
+    TFalse,
     TNumC,
     TPlusC,
     TMultC,
@@ -18,6 +18,7 @@ pub enum Token {
     TIdC,
     TAppC,
     TFdC,
+    TType(String)
 }
 
 #[derive(Debug)]
