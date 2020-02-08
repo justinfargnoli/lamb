@@ -51,6 +51,6 @@ mod tests {
         assert_eq!(token_stream.next(), Some(Token::TNumC));
         assert_eq!(token_stream.next(), Some(Token::ParenLeft));
         assert_eq!(token_stream.next(), Some(Token::Number(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight)); 
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
     }
 }
