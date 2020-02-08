@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{Bytes, Read, Result};
 use std::iter::Peekable;
 
-pub fn build_reader(input_file: &str) -> Result<Peekable<Bytes<File>>> {
+pub fn build(input_file: &str) -> Result<Peekable<Bytes<File>>> {
     Result::Ok(File::open(input_file)?.bytes().peekable())
 }
 
@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn input() {
-        let mut characters = build_reader("input1.txt").expect("Unable to open file");
+        let mut characters = build("input1.txt").expect("Unable to open file");
         assert_eq!(characters.next().unwrap().unwrap(), 'n' as u8);
         assert_eq!(characters.next().unwrap().unwrap(), 'u' as u8);
         assert_eq!(characters.next().unwrap().unwrap(), 'm' as u8);
