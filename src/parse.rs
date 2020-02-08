@@ -1,4 +1,4 @@
-use crate::tokenizer::TokenStream;
+use crate::tokenize::TokenStream;
 use crate::Type;
 use std::io::Read;
 
