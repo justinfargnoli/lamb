@@ -16,12 +16,51 @@ pub enum AST {
 }
 
 impl AST {
-	pub fn build(mut token_stream: TokenStream<impl Read>) -> Box<AST> {
+	pub fn build(token_stream:&mut TokenStream<impl Read>) -> Box<AST> {
 		match token_stream.next() {
 			Some(token) => {
 				match token {
 					Token::TNumC => Box::new(AST::Anumc),
-					_ => Box::new(AST::Anumc),
+					Token::TTrueC => Box::new(AST::AtrueC),
+					Token::TFalseC => Box::new(AST::AfalseC),
+					Token::TPlusC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AplusC(ast1, ast2))
+					}
+					Token::TMultC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AmultC(ast1, ast2))
+					}
+					Token::TIfC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast3 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AifC {cnd: ast1, then: ast2, els: ast3}) 
+					}
+					Token::TIdC => {	//TODO: WHAT SHOULD THIS BE
+						assert_eq!(Token::Quotes, token_stream.next().unwrap());
+						let mut string_ast;
+						match token_stream.next().unwrap() {
+							Token::ID(val) => {string_ast = Box::new(AST::AidC(val));},
+							_ => panic!("String not found!"),
+						}
+						assert_eq!(Token::Quotes, token_stream.next().unwrap());
+						string_ast
+					}
+
+					_ => Box::new(AST::AfalseC),
 				}
 			}
 			None => panic!("IAUFHI")

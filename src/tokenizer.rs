@@ -1,10 +1,12 @@
 use std::io::{Bytes, Read};
 use std::iter::Peekable;
 
+#[derive(Debug, PartialEq)]
 pub enum Token {
     ParenLeft,
     ParenRight,
     Comma,
+    Quotes,
     ID(String),
     Number(u32),
     TTrueC,
