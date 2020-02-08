@@ -11,7 +11,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn input() {
+    fn read_1() {
         let mut characters = build("input1.txt").expect("Unable to open file");
         assert_eq!(characters.next().unwrap().unwrap(), 'n' as u8);
         assert_eq!(characters.next().unwrap().unwrap(), 'u' as u8);
