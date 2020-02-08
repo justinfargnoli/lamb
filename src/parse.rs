@@ -1,5 +1,7 @@
-use crate::tokenize::TokenStream;
+use crate::tokenize::{TokenStream, Token};
 use crate::Type;
+use std::io::Read;
+
 
 pub enum AST {
     Anumc,
@@ -26,7 +28,7 @@ pub enum AST {
 }
 
 impl AST {
-	pub fn build(token_stream:&mut TokenStream<impl Read>) -> Box<AST> {
+	pub fn build(token_stream:&mut TokenStream) -> Box<AST> {
 		match token_stream.next() {
 			Some(token) => {
 				match token {
