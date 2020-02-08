@@ -16,7 +16,9 @@ mod tests {
 
     #[test]
     fn read_1() {
-        let mut character_iter = build("input1.txt").expect("Unable to open file").into_iter();
+        let mut character_iter = build("input1.txt")
+            .expect("Unable to open file")
+            .into_iter();
         assert_eq!(character_iter.next().unwrap(), 'n');
         assert_eq!(character_iter.next().unwrap(), 'u');
         assert_eq!(character_iter.next().unwrap(), 'm');
