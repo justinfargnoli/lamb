@@ -38,11 +38,10 @@ impl Iterator for TokenStream {
                 '(' => Some(Token::ParenLeft),
                 ')' => Some(Token::ParenRight),
                 ',' => Some(Token::Comma),
-                _ => Some(Token::TFdC),
+                _ => panic!("Your input wasn't able to be converted into a token stream."),
             },
             None => None,
         }
-        // unimplemented!()
     }
 }
 
