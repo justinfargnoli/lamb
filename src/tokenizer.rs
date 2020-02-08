@@ -20,15 +20,13 @@ pub enum Token {
 
 #[derive(Debug)]
 pub struct TokenStream<T: Read> {
-	character_stream: Peekable<Bytes<T>>, 
+    character_stream: Peekable<Bytes<T>>,
 }
 
 impl<T: Read> TokenStream<T> {
-	pub fn build(character_stream: Peekable<Bytes<T>>) -> TokenStream<T> {
-		TokenStream {
-			character_stream,
-		}
-	}
+    pub fn build(character_stream: Peekable<Bytes<T>>) -> TokenStream<T> {
+        TokenStream { character_stream }
+    }
 }
 
 impl<T: Read> Iterator for TokenStream<T> {
@@ -38,4 +36,3 @@ impl<T: Read> Iterator for TokenStream<T> {
         unimplemented!()
     }
 }
-
