@@ -16,13 +16,13 @@ mod tests {
 
     #[test]
     fn read_1() {
-        let mut characters = build("input1.txt").expect("Unable to open file");
-        assert_eq!(characters.next().unwrap().unwrap(), 'n' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), 'u' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), 'm' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), 'C' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), '(' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), '2' as u8);
-        assert_eq!(characters.next().unwrap().unwrap(), ')' as u8);
+        let mut character_iter = build("input1.txt").expect("Unable to open file").into_iter();
+        assert_eq!(character_iter.next().unwrap(), 'n');
+        assert_eq!(character_iter.next().unwrap(), 'u');
+        assert_eq!(character_iter.next().unwrap(), 'm');
+        assert_eq!(character_iter.next().unwrap(), 'C');
+        assert_eq!(character_iter.next().unwrap(), '(');
+        assert_eq!(character_iter.next().unwrap(), '2');
+        assert_eq!(character_iter.next().unwrap(), ')');
     }
 }
