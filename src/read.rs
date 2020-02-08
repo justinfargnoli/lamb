@@ -1,9 +1,13 @@
 use std::fs::File;
-use std::io::{Bytes, Read, Result};
-use std::iter::Peekable;
+use std::io::{Read, Result};
 
-pub fn build(input_file: &str) -> Result<Peekable<Bytes<File>>> {
-    Result::Ok(File::open(input_file)?.bytes().peekable())
+pub fn build(input_file: &str) -> Result<Vec<char>> {
+    Result::Ok(
+        File::open(input_file)?
+            .bytes()
+            .map(|byte| byte.unwrap() as char)
+            .collect(),
+    )
 }
 
 #[cfg(test)]

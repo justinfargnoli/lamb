@@ -1,7 +1,4 @@
-use std::io::{Bytes, Read};
-use std::iter::Peekable;
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
     ParenLeft,
     ParenRight,
@@ -20,21 +17,32 @@ pub enum Token {
 }
 
 #[derive(Debug)]
-pub struct TokenStream<T: Read> {
-    character_stream: Peekable<Bytes<T>>,
+pub struct TokenStream {
+    character_stream: std::vec::IntoIter<char>,
 }
 
-impl<T: Read> TokenStream<T> {
-    pub fn build(character_stream: Peekable<Bytes<T>>) -> TokenStream<T> {
-        TokenStream { character_stream }
+impl TokenStream {
+    pub fn build(character_stream: Vec<char>) -> TokenStream {
+        TokenStream {
+            character_stream: character_stream.into_iter(),
+        }
     }
 }
 
-impl<T: Read> Iterator for TokenStream<T> {
-    type Item = TokenStream<T>;
+impl Iterator for TokenStream {
+    type Item = Token;
 
-    fn next(&mut self) -> Option<TokenStream<T>> {
-        unimplemented!()
+    fn next(&mut self) -> Option<Token> {
+        match self.character_stream.next() {
+            Some(character) => match character {
+                '(' => Some(Token::ParenLeft),
+                ')' => Some(Token::ParenRight),
+                ',' => Some(Token::Comma),
+                _ => Some(Token::TFdC),
+            },
+            None => None,
+        }
+        // unimplemented!()
     }
 }
 
@@ -45,8 +53,8 @@ mod tests {
 
     #[test]
     fn tokenize_1() {
-        let mut characters = read::build("input1.txt").expect("Unable to open file");
-        let token_stream = TokenStream::build(characters);
+        let characters = read::build("input1.txt").expect("Unable to open file");
+        let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TNumC));
         assert_eq!(token_stream.next(), Some(Token::ParenLeft));
