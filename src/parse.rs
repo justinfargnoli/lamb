@@ -1,7 +1,6 @@
 use crate::tokenize::TokenStream;
 use crate::Type;
-use crate::tokenizer::TokenStream;
-use crate::tokenizer::Token;
+use crate::tokenize::Token;
 use std::io::Read;
 
 pub enum AST {
@@ -30,15 +29,15 @@ pub enum AST {
 
 impl AST {
 	pub fn build(mut token_stream: TokenStream<impl Read>) -> Box<AST> {
-		match token_stream.next() {
-			Some(token) => {
-				match token {
-					Token::TNumC => Box::new(AST::Anumc),
-					_ => Box::new(AST::Anumc),
-				}
-			}
-			None => panic!("IAUFHI")
-		}
-		// unimplemented!()
+		// match token_stream.next() {
+		// 	Some(token) => {
+		// 		match token {
+		// 			Token::TNumC => Box::new(AST::Anumc),
+		// 			_ => Box::new(AST::Anumc),
+		// 		}
+		// 	}
+		// 	None => panic!("IAUFHI")
+		// }
+		unimplemented!()
 	}
 }
