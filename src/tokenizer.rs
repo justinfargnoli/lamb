@@ -32,9 +32,9 @@ impl<T: Read> TokenStream<T> {
 }
 
 impl<T: Read> Iterator for TokenStream<T> {
-    type Item = TokenStream<T>;
+    type Item = Token;
 
-    fn next(&mut self) -> Option<TokenStream<T>> {
+    fn next(&mut self) -> Option<Token> {
         unimplemented!()
     }
 }
