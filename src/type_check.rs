@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
     match *ast {
-        AST::Anumc => Type::NumT,
         AST::AtrueC => Type::BoolT,
         AST::AfalseC => Type::BoolT,
+        AST::Anumc => Type::NumT,
         AST::AplusC(op1, op2) => {
         	if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
         		Type::NumT
@@ -48,8 +48,8 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         	}
         }
         AST::AappC {func, arg} => {
-        	let arg_type = tc(arg, tenv);
         	let fun_type = tc(func, tenv);
+        	let arg_type = tc(arg, tenv);
         	match fun_type {
         		Type::FunT {arg: funT_arg, ret: funT_ret} =>  {
         			if arg_type == *funT_arg {

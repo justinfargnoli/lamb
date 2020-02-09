@@ -114,21 +114,11 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         //THE ARGUMENT TYPE
                         let arg_type = AST::parse_type(token_stream);
-                        // match token_stream.next().unwrap() {
-                        // 	Token::NumT => {arg_type = Box::new(Type::NumT);},
-                        // 	Token::BoolT => {arg_type = Box::new(Type::BoolT);},
-                        // 	Token::FunT => {arg_type = Box::new(Type::FunT);},
-                        // 	_ => panic!("Argument type not found!"),
-                        // }
+
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         //THE RETURN TYPE
                         let ret_type = AST::parse_type(token_stream);
-                        // match token_stream.next().unwrap() {
-                        // 	Token::NumT => {ret_type = Box::new(Type::NumT);},
-                        // 	Token::BoolT => {ret_type = Box::new(Type::BoolT);},
-                        // 	Token::FunT => {ret_type = Box::new(Type::FunT);},
-                        // 	_ => panic!("Argument type not found!"),
-                        // }
+                        
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
 
                         let ast_body = AST::build(token_stream);
@@ -167,7 +157,7 @@ impl AST {
                 }
                 _ => panic!("Argument type not found!"),
             },
-            None => panic!("No token found"),
+            None => panic!("No token found in parsing type"),
         }
     }
 }
@@ -177,16 +167,16 @@ mod tests {
     use super::*;
     use std::collections::VecDeque;
 
-    #[test]
-    fn parse_1() {
-        //testing numC(1)
-        let tokens = VecDeque::from(vec![
-            Token::TNumC,
-            Token::ParenLeft,
-            Token::Number(1),
-            Token::ParenRight,
-        ]);
-        let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
-    }
+    // #[test]
+    // fn parse_1() {
+    //     //testing numC(1)
+    //     let tokens = VecDeque::from(vec![
+    //         Token::TNumC,
+    //         Token::ParenLeft,
+    //         Token::Number(1),
+    //         Token::ParenRight,
+    //     ]);
+    //     let mut token_stream = TokenStream::build_test(tokens, 0);
+    //     assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
+    // }
 }
