@@ -79,8 +79,8 @@ impl AST {
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {
-                                string_ast = Box::new(AST::AidC(val));
+                            Token::ID(id) => {
+                                string_ast = Box::new(AST::AidC(id));
                             }
                             _ => panic!("String not found!"),
                         }
