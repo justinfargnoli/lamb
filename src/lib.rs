@@ -4,8 +4,8 @@ mod tokenize;
 mod type_check;
 
 use parse::AST;
-use tokenize::TokenStream;
 use std::collections::HashMap;
+use tokenize::TokenStream;
 
 #[derive(Debug, PartialEq)]
 pub enum Type {

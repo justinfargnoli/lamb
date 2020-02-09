@@ -89,8 +89,7 @@ impl TokenStream {
                 } else if next_char == 'd' {
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
                     tokens.push(Token::TFdC);
-                }
-                else {
+                } else {
                     panic!()
                 }
             }
@@ -122,8 +121,7 @@ impl TokenStream {
                 } else if next_char == 'd' {
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
                     tokens.push(Token::TIdC);
-                }
-                else {
+                } else {
                     panic!()
                 }
             }
