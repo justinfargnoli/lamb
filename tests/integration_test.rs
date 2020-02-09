@@ -93,3 +93,12 @@ fn type_check_input_11() {
 fn type_check_input_12() {
     type_checker::type_check("tests/inputs/input12.txt");
 }
+
+#[test]
+fn type_check_input_13() {
+    assert_eq!(
+        type_checker::type_check("tests/inputs/input13.txt"),
+        Type::BoolT
+    );
+}
+
