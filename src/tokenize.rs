@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq)]
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     ParenLeft,
     ParenRight,
@@ -22,118 +24,118 @@ pub enum Token {
 
 #[derive(Debug, PartialEq)]
 pub struct TokenStream {
-    stream: Vec<Token>,
+    stream: VecDeque<Token>,
     curr_index: usize,
 }
 
 impl TokenStream {
-    pub fn build(character_stream: Vec<char>) -> TokenStream {
+    pub fn build(character_stream: VecDeque<char>) -> TokenStream {
         TokenStream {
             stream: TokenStream::tokenize(character_stream),
             curr_index: 0,
         }
     }
 
-    pub fn build_test(token_stream: Vec<Token>, curr_index: usize) -> TokenStream {
+    pub fn build_test(token_stream: VecDeque<Token>, curr_index: usize) -> TokenStream {
         TokenStream {
             stream: token_stream,
             curr_index: curr_index,
         }
     }
 
-    pub fn stream(&self) -> &Vec<Token> {
+    pub fn stream(&self) -> &VecDeque<Token> {
         &self.stream
     }
 
-    pub fn stream_mut(&mut self) -> &mut Vec<Token> {
+    pub fn stream_mut(&mut self) -> &mut VecDeque<Token> {
         &mut self.stream
     }
 
-    fn tokenize(char_stream: Vec<char>) -> Vec<Token> {
-        let mut tokens = Vec::new();
-        let mut curr_index: usize = 0;
-        match TokenStream::next_char(&char_stream, &mut curr_index) {
-            '(' => tokens.push(Token::ParenLeft),
-            ')' => tokens.push(Token::ParenRight),
-            ',' => tokens.push(Token::Comma),
-            '\"' => tokens.push(Token::Quote),
+    fn tokenize(mut char_stream: VecDeque<char>) -> VecDeque<Token> {
+        let mut tokens = VecDeque::new();
+        match char_stream.pop_front().unwrap() {
+            '(' => tokens.push_back(Token::ParenLeft),
+            ')' => tokens.push_back(Token::ParenRight),
+            ',' => tokens.push_back(Token::Comma),
+            '\"' => tokens.push_back(Token::Quote),
             'n' => {
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'u');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'm');
-                let next_char = TokenStream::next_char(&char_stream, &mut curr_index);
+                assert_eq!(char_stream.pop_front().unwrap(), 'u');
+                assert_eq!(char_stream.pop_front().unwrap(), 'm');
+                let next_char = char_stream.pop_front().unwrap();
                 if next_char == 'T' {
-                    tokens.push(Token::NumT);
+                    tokens.push_back(Token::NumT);
                 } else if next_char == 'C' {
-                    tokens.push(Token::TNumC);
+                    tokens.push_back(Token::TNumC);
                 }
             }
             'b' => {
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'o');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'o');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'T');
-                tokens.push(Token::BoolT);
+                assert_eq!(char_stream.pop_front().unwrap(), 'o');
+                assert_eq!(char_stream.pop_front().unwrap(), 'o');
+                assert_eq!(char_stream.pop_front().unwrap(), 'l');
+                assert_eq!(char_stream.pop_front().unwrap(), 'T');
+                tokens.push_back(Token::BoolT);
             }
             'f' => {
-                let next_char = TokenStream::next_char(&char_stream, &mut curr_index);
+                let next_char = char_stream.pop_front().unwrap();
                 if next_char == 'u' {
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'n');
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'T');
-                    tokens.push(Token::FunT);
+                    assert_eq!(char_stream.pop_front().unwrap(), 'n');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'T');
+                    tokens.push_back(Token::FunT);
                 } else if next_char == 'a' {
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 's');
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'e');
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                    tokens.push(Token::TFalseC);
+                    assert_eq!(char_stream.pop_front().unwrap(), 'l');
+                    assert_eq!(char_stream.pop_front().unwrap(), 's');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'e');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TFalseC);
                 } else if next_char == 'd' {
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                    tokens.push(Token::TFdC);
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TFdC);
                 } else {
                     panic!()
                 }
             }
             'p' => {
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'u');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 's');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                tokens.push(Token::TPlusC);
+                assert_eq!(char_stream.pop_front().unwrap(), 'l');
+                assert_eq!(char_stream.pop_front().unwrap(), 'u');
+                assert_eq!(char_stream.pop_front().unwrap(), 's');
+                assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                tokens.push_back(Token::TPlusC);
             }
             'm' => {
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'u');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 't');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                tokens.push(Token::TMultC);
+                assert_eq!(char_stream.pop_front().unwrap(), 'u');
+                assert_eq!(char_stream.pop_front().unwrap(), 'l');
+                assert_eq!(char_stream.pop_front().unwrap(), 't');
+                assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                tokens.push_back(Token::TMultC);
             }
             'a' => {
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'p');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'p');
-                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                tokens.push(Token::TAppC);
+                assert_eq!(char_stream.pop_front().unwrap(), 'p');
+                assert_eq!(char_stream.pop_front().unwrap(), 'p');
+                assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                tokens.push_back(Token::TAppC);
             }
             'i' => {
-                let next_char = TokenStream::next_char(&char_stream, &mut curr_index);
+                let next_char = char_stream.pop_front().unwrap();
                 if next_char == 'f' {
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                    tokens.push(Token::TIfC);
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TIfC);
                 } else if next_char == 'd' {
-                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                    tokens.push(Token::TIdC);
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TIdC);
                 } else {
                     panic!()
                 }
             }
+            't' => {
+                assert_eq!(char_stream.pop_front().unwrap(), 'r');
+                assert_eq!(char_stream.pop_front().unwrap(), 'u');
+                assert_eq!(char_stream.pop_front().unwrap(), 'e');
+                assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                tokens.push_back(Token::TTrueC);
+            }
             _ => panic!("Your input wasn't able to be converted into a token stream."),
         }
         tokens
-    }
-
-    fn next_char(stream: &[char], curr_index: &mut usize) -> char {
-        let character = stream[*curr_index];
-        *curr_index += 1;
-        character
     }
 }
 
@@ -141,7 +143,7 @@ impl Iterator for TokenStream {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        unimplemented!()
+        self.stream.pop_front()
     }
 }
 
@@ -151,7 +153,7 @@ mod tests {
 
     #[test]
     fn tokenize_numC() {
-        let characters = vec!['n', 'u', 'm', 'C', '(', '2', ')'];
+        let characters = VecDeque::from(vec!['n', 'u', 'm', 'C', '(', '2', ')']);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TNumC));
@@ -162,7 +164,7 @@ mod tests {
 
     #[test]
     fn tokenize_idC() {
-        let characters = vec!['i', 'd', 'C', '\"', 'a', 'b', '\"'];
+        let characters = VecDeque::from(vec!['i', 'd', 'C', '\"', 'a', 'b', '\"']);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TIdC));
@@ -173,10 +175,10 @@ mod tests {
 
     #[test]
     fn tokenize_multC() {
-        let characters = vec![
+        let characters = VecDeque::from(vec![
             'm', 'u', 'l', 't', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
-        ];
+        ]);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TMultC));
@@ -195,10 +197,10 @@ mod tests {
 
     #[test]
     fn tokenize_plusC() {
-        let characters = vec![
+        let characters = VecDeque::from(vec![
             'p', 'l', 'u', 's', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
-        ];
+        ]);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TPlusC));
@@ -217,7 +219,7 @@ mod tests {
 
     #[test]
     fn tokenize_trueC() {
-        let characters = vec!['t', 'r', 'u', 'e', 'C'];
+        let characters = VecDeque::from(vec!['t', 'r', 'u', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TTrueC));
@@ -225,7 +227,7 @@ mod tests {
 
     #[test]
     fn tokenize_falseC() {
-        let characters = vec!['f', 'a', 'l', 's', 'e', 'C'];
+        let characters = VecDeque::from(vec!['f', 'a', 'l', 's', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TFalseC));
