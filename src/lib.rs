@@ -5,6 +5,7 @@ mod type_check;
 
 use parse::AST;
 use tokenize::TokenStream;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum Type {
@@ -17,7 +18,7 @@ pub fn type_check(input_file: &str) -> Type {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::tc(ast)
+    type_check::tc(ast, HashMap::new())
 }
 
 #[cfg(test)]
