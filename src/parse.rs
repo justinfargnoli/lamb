@@ -34,34 +34,38 @@ impl AST {
                     Token::TTrueC => Box::new(AST::AtrueC),
                     Token::TFalseC => Box::new(AST::AfalseC),
                     Token::TNumC => {
+                        assert_eq!(Token::TNumC, token_stream.next().unwrap());
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        assert_eq!(Token::Number(2), token_stream.next().unwrap());
+                        assert_eq!(
+                            std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)),
+                            std::mem::discriminant(&token_stream.next().unwrap())
+                        );
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::Anumc)
                     }
                     Token::TPlusC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
+                        let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
+                        let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AplusC(ast1, ast2))
                     }
                     Token::TMultC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
+                        let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
+                        let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AmultC(ast1, ast2))
                     }
                     Token::TIfC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
+                        let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
+                        let ast2 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast3 = AST::build(token_stream);
+                        let ast3 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AifC {
                             cnd: ast1,
@@ -73,7 +77,7 @@ impl AST {
                         //TODO: CHECK!!!!
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        let mut string_ast;
+                        let string_ast;
                         match token_stream.next().unwrap() {
                             Token::ID(id) => {
                                 string_ast = Box::new(AST::AidC(id));
@@ -86,9 +90,9 @@ impl AST {
                     }
                     Token::TAppC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
+                        let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
+                        let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AappC {
                             func: ast1,
@@ -99,7 +103,7 @@ impl AST {
                         //TODO: CHECK!!!!
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        let mut string_ast;
+                        let string_ast;
                         match token_stream.next().unwrap() {
                             Token::ID(val) => {
                                 string_ast = val;
@@ -109,7 +113,7 @@ impl AST {
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         //THE ARGUMENT TYPE
-                        let mut arg_type = AST::parse_type(token_stream);
+                        let arg_type = AST::parse_type(token_stream);
                         // match token_stream.next().unwrap() {
                         // 	Token::NumT => {arg_type = Box::new(Type::NumT);},
                         // 	Token::BoolT => {arg_type = Box::new(Type::BoolT);},
@@ -118,7 +122,7 @@ impl AST {
                         // }
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         //THE RETURN TYPE
-                        let mut ret_type = AST::parse_type(token_stream);
+                        let ret_type = AST::parse_type(token_stream);
                         // match token_stream.next().unwrap() {
                         // 	Token::NumT => {ret_type = Box::new(Type::NumT);},
                         // 	Token::BoolT => {ret_type = Box::new(Type::BoolT);},
@@ -127,7 +131,7 @@ impl AST {
                         // }
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
 
-                        let mut ast_body = AST::build(token_stream);
+                        let ast_body = AST::build(token_stream);
 
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
@@ -152,9 +156,9 @@ impl AST {
                 Token::BoolT => Box::new(Type::BoolT),
                 Token::FunT => {
                     assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                    let mut box1 = AST::parse_type(token_stream);
+                    let box1 = AST::parse_type(token_stream);
                     assert_eq!(Token::Comma, token_stream.next().unwrap());
-                    let mut box2 = AST::parse_type(token_stream);
+                    let box2 = AST::parse_type(token_stream);
                     assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                     Box::new(Type::FunT {
                         arg: box1,
@@ -171,16 +175,17 @@ impl AST {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::VecDeque;
 
     #[test]
     fn parse_1() {
         //testing numC(1)
-        let tokens = vec![
+        let tokens = VecDeque::from(vec![
             Token::TNumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
-        ];
+        ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
     }
