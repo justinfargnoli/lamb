@@ -99,7 +99,6 @@ impl AST {
                         })
                     }
                     Token::TFdC => {
-                        //TODO: CHECK!!!!
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
@@ -277,4 +276,50 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(*AST::build(&mut token_stream), AST::AifC{cnd: Box::new(AST::AtrueC),then: Box::new(AST::AtrueC),els: Box::new(AST::AfalseC)});
     }
+    #[test]
+    #[should_panic]
+    fn parse_7() {
+        //testing if(true, true false)
+        let tokens = VecDeque::from(vec![
+            Token::TIfC,
+            Token::ParenLeft,
+            Token::TTrueC,
+            Token::Comma,
+            Token::TTrueC,
+            Token::TFalseC, 
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+    	let test = AST::build(&mut token_stream);
+	}
+	#[test]
+	fn parse_8() {
+		//testing id("x")
+		let tokens = VecDeque::from(vec![
+            Token::TIdC,
+            Token::ParenLeft,
+            Token::Quote,
+            Token::ID("x".to_string()),
+            Token::Quote, 
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::AidC("x".to_string()));
+    
+	}
+	#[test]
+	#[should_panic]
+	fn parse_9() {
+		//testing id("x)
+		let tokens = VecDeque::from(vec![
+            Token::TIdC,
+            Token::ParenLeft,
+            Token::Quote,
+            Token::ID("x".to_string()), 
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+    	let test = AST::build(&mut token_stream);
+	}
+	//Tests fir appC and fdC omitted here, done externally.
 }
