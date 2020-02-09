@@ -1,6 +1,7 @@
 use crate::tokenize::{Token, TokenStream};
 use crate::Type;
 
+#[derive(Debug, PartialEq)]
 pub enum AST {
     Anumc,
     AplusC(Box<AST>, Box<AST>),
@@ -129,7 +130,7 @@ impl AST {
 	pub fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
 		match token_stream.next() {
 			Some(token) => {
-				match(token) {
+				match token {
 					Token::NumT => Box::new(Type::NumT),
 					Token::BoolT => Box::new(Type::BoolT),
 					Token::FunT => {
@@ -146,4 +147,16 @@ impl AST {
 			None => panic!("No token found")
 		}
 	}
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_1() {	//testing numC(1)
+        let tokens = vec![Token::TNumC, Token::ParenLeft, Token::Number(1), Token::ParenRight];
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
+    }
 }

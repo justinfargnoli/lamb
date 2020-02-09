@@ -22,18 +22,23 @@ pub enum Token {
     TFdC,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TokenStream {
-    character_stream: Vec<char>,
+    character_stream: Vec<Token>,
     current_index: usize,
 }
 
 impl TokenStream {
     pub fn build(character_stream: Vec<char>) -> TokenStream {
-        TokenStream {
-            character_stream,
-            current_index: 0,
-        }
+        // TokenStream {
+        //     character_stream,
+        //     current_index: 0,
+        // }
+        unimplemented!()
+    }
+
+    pub fn build_test(character_stream: Vec<Token>, current_index: usize) -> TokenStream {
+        TokenStream { character_stream: character_stream, current_index: current_index}
     }
 }
 
@@ -41,31 +46,32 @@ impl Iterator for TokenStream {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        let token = match self.character_stream[self.current_index] {
-            '(' => Some(Token::ParenLeft),
-            ')' => Some(Token::ParenRight),
-            ',' => Some(Token::Comma),
-            '\"' => Some(Token::Quote),
-            _ => panic!("Your input wasn't able to be converted into a token stream."),
-        };
-        self.current_index += 1;
-        token
+        // let token = match self.character_stream[self.current_index] {
+        //     '(' => Some(Token::ParenLeft),
+        //     ')' => Some(Token::ParenRight),
+        //     ',' => Some(Token::Comma),
+        //     '\"' => Some(Token::Quote),
+        //     _ => panic!("Your input wasn't able to be converted into a token stream."),
+        // };
+        // self.current_index += 1;
+        // token
+        unimplemented!()
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::read;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::read;
 
-    #[test]
-    fn tokenize_1() {
-        let characters = read::build("input1.txt").expect("Unable to open file");
-        let mut token_stream = TokenStream::build(characters);
+//     #[test]
+//     fn tokenize_1() {
+//         let characters = read::build("input1.txt").expect("Unable to open file");
+//         let mut token_stream = TokenStream::build(characters);
 
-        assert_eq!(token_stream.next(), Some(Token::TNumC));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
-        assert_eq!(token_stream.next(), Some(Token::Number(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-    }
-}
+//         assert_eq!(token_stream.next(), Some(Token::TNumC));
+//         assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+//         assert_eq!(token_stream.next(), Some(Token::Number(2)));
+//         assert_eq!(token_stream.next(), Some(Token::ParenRight));
+//     }
+// }
