@@ -8,13 +8,13 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         AST::AtrueC => Type::BoolT,
         AST::AfalseC => Type::BoolT,
         AST::AplusC(op1, op2) => {
-        	if tc(op1, &tenv) == Type::NumT && tc(op2, &tenv) == Type::NumT {
+        	if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
         		Type::NumT;
         	}
         	panic!("Types differ in AplusC!")
         }
         AST::AmultC(op1, op2) => {
-        	if tc(op1, &tenv) == Type::NumT && tc(op2, &tenv) == Type::NumT {
+        	if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
         		Type::NumT;
         	}
         	panic!("Types differ in AmultC!")
@@ -43,9 +43,21 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         		panic!("Variable not saved in type environment")
         	}
         }
-        // AST::AappC {func, arg} => {
-
-        // }
+        AST::AappC {func, arg} => {
+        	let arg_type = tc(arg, tenv);
+        	let fun_type = tc(func, tenv);
+        	match fun_type {
+        		Type::FunT {arg: funT_arg, ret: funT_ret} =>  {
+        			if arg_type == *funT_arg {
+        				*funT_ret	//dereferencing the box type
+        			}
+        			else {
+        				panic!("Argument type doesn't match declared type")
+        			}
+        		}
+        		_ => panic!("Not a function in appC")
+        	}
+        }
         _ => Type::NumT,
     }
 
