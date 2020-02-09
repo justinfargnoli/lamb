@@ -9,8 +9,8 @@ pub enum Token {
     FunT,
     ID(String),
     Number(u32),
-    TTrue,
-    TFalse,
+    TTrueC,
+    TFalseC,
     TNumC,
     TPlusC,
     TMultC,
@@ -23,19 +23,30 @@ pub enum Token {
 #[derive(Debug, PartialEq)]
 pub struct TokenStream {
     stream: Vec<Token>,
-    current_index: usize,
+    curr_index: usize,
 }
 
 impl TokenStream {
     pub fn build(character_stream: Vec<char>) -> TokenStream {
         TokenStream {
             stream: TokenStream::tokenize(character_stream),
-            current_index: 0,
+            curr_index: 0,
         }
     }
 
-    pub fn build_test(character_stream: Vec<Token>, current_index: usize) -> TokenStream {
-        TokenStream { character_stream: character_stream, current_index: current_index}
+    pub fn build_test(token_stream: Vec<Token>, curr_index: usize) -> TokenStream {
+        TokenStream {
+            stream: token_stream,
+            curr_index: curr_index,
+        }
+    }
+
+    pub fn stream(&self) -> &Vec<Token> {
+        &self.stream
+    }
+
+    pub fn stream_mut(&mut self) -> &mut Vec<Token> {
+        &mut self.stream
     }
 
     fn tokenize(char_stream: Vec<char>) -> Vec<Token> {
@@ -75,7 +86,7 @@ impl TokenStream {
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 's');
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'e');
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
-                    tokens.push(Token::TFalse);
+                    tokens.push(Token::TFalseC);
                 } else if next_char == 'd' {
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
                     tokens.push(Token::TFdC);
@@ -105,6 +116,7 @@ impl Iterator for TokenStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn tokenize_numC() {
         let characters = vec!['n', 'u', 'm', 'C', '(', '2', ')'];
@@ -168,6 +180,87 @@ mod tests {
         assert_eq!(token_stream.next(), Some(Token::ParenLeft));
         assert_eq!(token_stream.next(), Some(Token::Number(2)));
         assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+    }
+
+    #[test]
+    fn tokenize_trueC() {
+        let characters = vec!['t', 'r', 'u', 'e', 'C'];
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TTrueC));
+    }
+
+    #[test]
+    fn tokenize_falseC() {
+        let characters = vec!['f', 'a', 'l', 's', 'e', 'C'];
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TFalseC));
+    }
+
+    #[test]
+    fn tokenize_ifC() {
+        let characters = String::from("ifC(falseC, numC(1), numC(3))")
+            .chars()
+            .collect();
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TFalseC));
+    }
+
+    #[test]
+    fn tokenize_fdC() {
+        let characters = String::from("fdC(\"x\", boolT, boolT, idC(\"x\"))")
+            .chars()
+            .collect();
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TFdC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::ID(String::from("x"))));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::BoolT));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::BoolT));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::TIdC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::ID(String::from("x"))));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+    }
+
+    #[test]
+    fn tokenize_appC() {
+        let characters = String::from("appC(fdC(\"x\", boolT, boolT, idC(\"x\")), falseC)")
+            .chars()
+            .collect();
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TAppC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::TFdC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::ID(String::from("x"))));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::BoolT));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::BoolT));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::TIdC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Quote));
+        assert_eq!(token_stream.next(), Some(Token::ID(String::from("x"))));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::TFalseC));
         assert_eq!(token_stream.next(), Some(Token::ParenRight));
     }
 }
