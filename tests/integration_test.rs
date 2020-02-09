@@ -81,3 +81,15 @@ fn type_check_input_10() {
         Type::NumT
     );
 }
+
+#[test]
+#[should_panic]
+fn type_check_input_11() {
+    type_checker::type_check("tests/inputs/input11.txt");
+}
+
+#[test]
+#[should_panic]
+fn type_check_input_12() {
+    type_checker::type_check("tests/inputs/input12.txt");
+}
