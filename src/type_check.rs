@@ -70,7 +70,6 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         		panic!("Body type doesn't match declared type")
         	}
         }
-        _ => Type::NumT,
     }
 
     // unimplemented!()

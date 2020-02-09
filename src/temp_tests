@@ -1,10 +1,7 @@
 plusC(numC(1), numC(2))
 
-
-plusC(numC(1), numC(2))
-
 plusC(multC(numC(10), numC(20)), numC(2))
 
-fdC("arg", funT(numT, boolT), numT, ("ANYTHING"))
+fdC("x", , numT, idC("arg"))
 
 TPlusC, ParenLeft, TNumC, ParenLeft, Number, ParenRight, comma, TNumC, ParenLeft, Number, ParenRight, ParenRight
