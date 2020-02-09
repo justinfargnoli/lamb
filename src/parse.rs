@@ -35,9 +35,9 @@ impl AST {
                     Token::TFalseC => Box::new(AST::AfalseC),
                     Token::TNumC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast = AST::Anumc;
+                        assert_eq!(Token::Number(2), token_stream.next().unwrap());
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(ast)
+                        Box::new(AST::Anumc)
                     }
                     Token::TPlusC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -75,8 +75,8 @@ impl AST {
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let mut string_ast;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {
-                                string_ast = Box::new(AST::AidC(val));
+                            Token::ID(id) => {
+                                string_ast = Box::new(AST::AidC(id));
                             }
                             _ => panic!("String not found!"),
                         }
