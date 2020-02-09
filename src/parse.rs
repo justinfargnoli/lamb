@@ -34,7 +34,6 @@ impl AST {
                     Token::TTrueC => Box::new(AST::AtrueC),
                     Token::TFalseC => Box::new(AST::AfalseC),
                     Token::TNumC => {
-                        assert_eq!(Token::TNumC, token_stream.next().unwrap());
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(
                             std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)),
@@ -167,16 +166,62 @@ mod tests {
     use super::*;
     use std::collections::VecDeque;
 
-    // #[test]
-    // fn parse_1() {
-    //     //testing numC(1)
-    //     let tokens = VecDeque::from(vec![
-    //         Token::TNumC,
-    //         Token::ParenLeft,
-    //         Token::Number(1),
-    //         Token::ParenRight,
-    //     ]);
-    //     let mut token_stream = TokenStream::build_test(tokens, 0);
-    //     assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
-    // }
+    #[test]
+    fn parse_1() {
+        //testing numC(1)
+        let tokens = VecDeque::from(vec![
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
+    }
+    #[test]
+    fn parse_2() {
+        //testing plusC(numC(1), numC(2))
+        let tokens = VecDeque::from(vec![
+        	Token::TPlusC,
+            Token::ParenLeft,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+            Token::Comma,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(2),
+            Token::ParenRight,
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::AplusC(Box::new(AST::Anumc),Box::new(AST::Anumc)));
+    }
+    #[test]
+    fn parse_3() {
+        //testing numC(1)
+        let tokens = VecDeque::from(vec![
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
+    }
+    #[test]
+    fn parse_4() {
+        //testing numC(1)
+        let tokens = VecDeque::from(vec![
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+        ]);
+        // let mut token_stream = TokenStream::build_test(tokens, 0);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
+    }
+
 }
