@@ -1,9 +1,14 @@
+use crate::Type;
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
     ParenLeft,
     ParenRight,
     Comma,
     Quote,
+    NumT,
+    BoolT,
+    FunT,
     ID(String),
     Number(u32),
     TTrue,
@@ -19,13 +24,15 @@ pub enum Token {
 
 #[derive(Debug)]
 pub struct TokenStream {
-    character_stream: std::vec::IntoIter<char>,
+    character_stream: Vec<char>,
+    current_index: usize,
 }
 
 impl TokenStream {
     pub fn build(character_stream: Vec<char>) -> TokenStream {
         TokenStream {
-            character_stream: character_stream.into_iter(),
+            character_stream,
+            current_index: 0,
         }
     }
 }
@@ -34,16 +41,15 @@ impl Iterator for TokenStream {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        match self.character_stream.next() {
-            Some(character) => match character {
-                '(' => Some(Token::ParenLeft),
-                ')' => Some(Token::ParenRight),
-                ',' => Some(Token::Comma),
-                _ => Some(Token::TFdC),
-            },
-            None => None,
-        }
-        // unimplemented!()
+        let token = match self.character_stream[self.current_index] {
+            '(' => Some(Token::ParenLeft),
+            ')' => Some(Token::ParenRight),
+            ',' => Some(Token::Comma),
+            '\"' => Some(Token::Quote),
+            _ => panic!("Your input wasn't able to be converted into a token stream."),
+        };
+        self.current_index += 1;
+        token
     }
 }
 

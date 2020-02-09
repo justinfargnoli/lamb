@@ -1,7 +1,5 @@
-use crate::tokenize::{TokenStream, Token};
+use crate::tokenize::{Token, TokenStream};
 use crate::Type;
-use std::io::Read;
-
 
 pub enum AST {
     Anumc,
@@ -104,13 +102,16 @@ impl AST {
 
 						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-						Box::new(AST::AfalseC)	//TODO: NOT ACTUALLY THIS
-					}
 
-	// AfdC {arg_name: String, arg_type: Type, ret_type: Type, body: Box<AST>},
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        //TODO: DO THE RETURN TYPE
 
+                        let mut ast_body = AST::build(token_stream);
 
+                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
+                        Box::new(AST::AfalseC) //TODO: NOT ACTUALLY THIS
+                    }
 					_ => Box::new(AST::AfalseC)	////TODO: THIS should never happen
 				}
 			}
