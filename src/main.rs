@@ -1,8 +1,8 @@
 use std::env;
-use type_checker;
+use tc200;
 
 fn main() {
     let input_file = env::args().nth(1).expect("Usage: & tc <input file>");
 
-    println!("The type is {:?}", type_checker::type_check(&input_file));
+    println!("The type is {:?}", tc200::type_check(&input_file));
 }
