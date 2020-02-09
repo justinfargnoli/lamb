@@ -129,9 +129,9 @@ impl AST {
                             arg_type: arg_type,
                             ret_type: ret_type,
                             body: ast_body,
-                        }) //TODO: NOT ACTUALLY THIS
+                        })
                     }
-                    _ => Box::new(AST::AfalseC), ////TODO: THIS should never happen
+                    _ => panic!("Parsing error"), ////TODO: THIS should never happen
                 }
             }
             None => panic!("No token found"),
@@ -199,29 +199,79 @@ mod tests {
         assert_eq!(*AST::build(&mut token_stream), AST::AplusC(Box::new(AST::Anumc),Box::new(AST::Anumc)));
     }
     #[test]
+    #[should_panic]
     fn parse_3() {
-        //testing numC(1)
+        //testing plusC(1, numC(2)), this should panic
         let tokens = VecDeque::from(vec![
-            Token::TNumC,
+        	Token::TPlusC,
             Token::ParenLeft,
             Token::Number(1),
+            Token::Comma,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(2),
+            Token::ParenRight,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
-    }
-    #[test]
-    fn parse_4() {
-        //testing numC(1)
-        let tokens = VecDeque::from(vec![
-            Token::TNumC,
-            Token::ParenLeft,
-            Token::Number(1),
-            Token::ParenRight,
-        ]);
-        // let mut token_stream = TokenStream::build_test(tokens, 0);
-        let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
+        let test = AST::build(&mut token_stream);
     }
 
+    #[test]
+    fn parse_4() {
+        //testing multC(numC(1), numC(2))
+        let tokens = VecDeque::from(vec![
+        	Token::TMultC,
+            Token::ParenLeft,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+            Token::Comma,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(2),
+            Token::ParenRight,
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::AmultC(Box::new(AST::Anumc),Box::new(AST::Anumc)));
+    }
+    #[test]
+    #[should_panic]
+    fn parse_5() {
+        //testing plusC(numC(1), numC(2) -> this should panic (missing right parenthesis)
+        let tokens = VecDeque::from(vec![
+        	Token::TPlusC,
+            Token::ParenLeft,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(1),
+            Token::ParenRight,
+            Token::Comma,
+            Token::TNumC,
+            Token::ParenLeft,
+            Token::Number(2),
+            Token::ParenRight,
+            // Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        let test = AST::build(&mut token_stream);
+    }
+    #[test]
+    fn parse_6() {
+        //testing if(true, true, false)
+        let tokens = VecDeque::from(vec![
+            Token::TIfC,
+            Token::ParenLeft,
+            Token::TTrueC,
+            Token::Comma,
+            Token::TTrueC,
+            Token::Comma,
+            Token::TFalseC, 
+            Token::ParenRight,
+        ]);
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(*AST::build(&mut token_stream), AST::AifC{cnd: Box::new(AST::AtrueC),then: Box::new(AST::AtrueC),els: Box::new(AST::AfalseC)});
+    }
 }
