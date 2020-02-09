@@ -217,7 +217,7 @@ mod tests {
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        let test = AST::build(&mut token_stream);
+        AST::build(&mut token_stream);
     }
 
     #[test]
@@ -259,7 +259,7 @@ mod tests {
             // Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        let test = AST::build(&mut token_stream);
+        AST::build(&mut token_stream);
     }
     #[test]
     fn parse_6() {
