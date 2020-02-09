@@ -73,7 +73,6 @@ impl AST {
                         })
                     }
                     Token::TIdC => {
-                        //TODO: CHECK!!!!
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
@@ -99,7 +98,7 @@ impl AST {
                         })
                     }
                     Token::TFdC => {
-                        //TODO: CHECK!!!!
+                        //THE ARGUMENT NAME
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
@@ -120,6 +119,7 @@ impl AST {
 
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
 
+                        //THE BODY
                         let ast_body = AST::build(token_stream);
 
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
@@ -136,9 +136,9 @@ impl AST {
             }
             None => panic!("No token found"),
         }
-        // unimplemented!()
     }
-    pub fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
+
+    fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
         match token_stream.next() {
             Some(token) => match token {
                 Token::NumT => Box::new(Type::NumT),
@@ -156,7 +156,7 @@ impl AST {
                 }
                 _ => panic!("Argument type not found!"),
             },
-            None => panic!("No token found in parsing type"),
+            None => panic!("No token found when parsing type"),
         }
     }
 }
@@ -178,6 +178,7 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(*AST::build(&mut token_stream), AST::Anumc);
     }
+
     #[test]
     fn parse_2() {
         //testing plusC(numC(1), numC(2))
@@ -201,6 +202,7 @@ mod tests {
             AST::AplusC(Box::new(AST::Anumc), Box::new(AST::Anumc))
         );
     }
+
     #[test]
     #[should_panic]
     fn parse_3() {
@@ -243,6 +245,7 @@ mod tests {
             AST::AmultC(Box::new(AST::Anumc), Box::new(AST::Anumc))
         );
     }
+
     #[test]
     #[should_panic]
     fn parse_5() {
@@ -264,6 +267,7 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
     }
+
     #[test]
     fn parse_6() {
         //testing if(true, true, false)
