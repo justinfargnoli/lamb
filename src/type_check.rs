@@ -23,6 +23,13 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Types differ in AmultC!")
             }
         }
+        AST::AeqC(operand1, operand2) => {
+            if tc(operand1, tenv) == tc(operand2, tenv) {
+                Type::BoolT
+            } else {
+                panic!("Types differ in AmultC!")
+            }
+        }
         AST::AifC { cnd, then, els } => {
             if tc(cnd, tenv) != Type::BoolT {
                 panic!("Condition in an if statement is not boolean!")
@@ -82,5 +89,23 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Body type doesn't match declared type")
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tc_eq_c() {
+        let input = Box::new(AST::AeqC(Box::new(AST::Anumc), Box::new(AST::Anumc)));
+        assert_eq!(tc(input, &mut HashMap::new()), Type::BoolT);
+    }
+
+    #[test]
+    #[should_panic]
+    fn tc_eq_c_fail() {
+        let input = Box::new(AST::AeqC(Box::new(AST::AtrueC), Box::new(AST::Anumc)));
+        tc(input, &mut HashMap::new());
     }
 }
