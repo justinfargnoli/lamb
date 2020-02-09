@@ -26,7 +26,7 @@ pub enum AST {
 }
 
 impl AST {
-	pub fn build(token_stream:&mut TokenStream) -> Box<AST> {
+	pub fn build(token_stream: &mut TokenStream) -> Box<AST> {
 		match token_stream.next() {
 			Some(token) => {
 				match token {
@@ -89,28 +89,35 @@ impl AST {
 						assert_eq!(Token::Quote, token_stream.next().unwrap());
 						let mut string_ast;
 						match token_stream.next().unwrap() {
-							Token::ID(val) => {string_ast = Box::new(AST::AidC(val));},
+							Token::ID(val) => {string_ast = val;},
 							_ => panic!("String not found!"),
 						}
+						assert_eq!(Token::Quote, token_stream.next().unwrap());
 						assert_eq!(Token::Comma, token_stream.next().unwrap());
-						//TODO: DO THE ARGUMENT TYPE
-
+						//THE ARGUMENT TYPE
+						let mut arg_type = AST::parse_type(token_stream);
+						// match token_stream.next().unwrap() {
+						// 	Token::NumT => {arg_type = Box::new(Type::NumT);},
+						// 	Token::BoolT => {arg_type = Box::new(Type::BoolT);},
+						// 	Token::FunT => {arg_type = Box::new(Type::FunT);},
+						// 	_ => panic!("Argument type not found!"),
+						// }
 						assert_eq!(Token::Comma, token_stream.next().unwrap());
-						//TODO: DO THE RETURN TYPE
+						//THE RETURN TYPE
+						let mut ret_type = AST::parse_type(token_stream);
+						// match token_stream.next().unwrap() {
+						// 	Token::NumT => {ret_type = Box::new(Type::NumT);},
+						// 	Token::BoolT => {ret_type = Box::new(Type::BoolT);},
+						// 	Token::FunT => {ret_type = Box::new(Type::FunT);},
+						// 	_ => panic!("Argument type not found!"),
+						// }
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
 						
 						let mut ast_body = AST::build(token_stream);
 
 						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        //TODO: DO THE RETURN TYPE
-
-                        let mut ast_body = AST::build(token_stream);
-
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-
-                        Box::new(AST::AfalseC) //TODO: NOT ACTUALLY THIS
+						Box::new(AST::AfdC {arg_name: string_ast, arg_type: arg_type, ret_type: ret_type, body: ast_body}) //TODO: NOT ACTUALLY THIS
                     }
 					_ => Box::new(AST::AfalseC)	////TODO: THIS should never happen
 				}
@@ -118,5 +125,25 @@ impl AST {
 			None => panic!("No token found")
 		}
 		// unimplemented!()
+	}
+	pub fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
+		match token_stream.next() {
+			Some(token) => {
+				match(token) {
+					Token::NumT => Box::new(Type::NumT),
+					Token::BoolT => Box::new(Type::BoolT),
+					Token::FunT => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut box1 = AST::parse_type(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut box2 = AST::parse_type(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(Type::FunT {arg:box1, ret: box2})
+					}
+					_ => panic!("Argument type not found!"),		
+				}
+			}
+			None => panic!("No token found")
+		}
 	}
 }
