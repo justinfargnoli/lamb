@@ -58,6 +58,18 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         		_ => panic!("Not a function in appC")
         	}
         }
+        AST::AfdC {arg_name, arg_type, ret_type, body} => {
+        	let mut ext_tenv = tenv.clone();
+        	let arg_type_clone = arg_type.clone();
+        	ext_tenv.insert(arg_name, *arg_type);
+        	let body_type = tc(body, &ext_tenv);
+        	if body_type == *ret_type {
+        		Type::FunT {arg: arg_type_clone, ret: ret_type}
+        	}
+        	else {
+        		panic!("Body type doesn't match declared type")
+        	}
+        }
         _ => Type::NumT,
     }
 
