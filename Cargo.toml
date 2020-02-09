@@ -1,5 +1,5 @@
 [package]
-name = "type_checker"
+name = "tc200"
 version = "0.1.0"
 authors = ["Justin Fargnoli <justinfargnoli@gmail.com>"]
 edition = "2018"

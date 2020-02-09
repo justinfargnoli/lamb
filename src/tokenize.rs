@@ -11,6 +11,7 @@ pub enum Token {
     FunT,
     ID(String),
     Number(u32),
+    TEqC,
     TTrueC,
     TFalseC,
     TNumC,
@@ -152,6 +153,11 @@ impl TokenStream {
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
                     tokens.push_back(Token::TTrueC);
                 }
+                'e' => {
+                    assert_eq!(char_stream.pop_front().unwrap(), 'q');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TEqC);
+                }
                 ' ' => continue,
                 _ => panic!("Your input wasn't able to be converted into a token stream."),
             }
@@ -254,6 +260,25 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::TFalseC));
+    }
+
+    #[test]
+    fn tokenize_eq_c() {
+        let characters = String::from("eqC(numC(1), numC(3))").chars().collect();
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TEqC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::TNumC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Number(1)));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::Comma));
+        assert_eq!(token_stream.next(), Some(Token::TNumC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Number(3)));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
     }
 
     #[test]
