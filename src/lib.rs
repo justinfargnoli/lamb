@@ -20,13 +20,3 @@ pub fn type_check(input_file: &str) -> Type {
     let ast = AST::build(&mut tokenizer);
     type_check::tc(ast, &HashMap::new())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn type_check_1() {
-        assert_eq!(type_check("input1.txt"), Type::NumT);
-    }
-}
