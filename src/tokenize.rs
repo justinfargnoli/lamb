@@ -20,7 +20,7 @@ pub enum Token {
     TFdC,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TokenStream {
     stream: Vec<Token>,
     current_index: usize,
@@ -32,6 +32,10 @@ impl TokenStream {
             stream: TokenStream::tokenize(character_stream),
             current_index: 0,
         }
+    }
+
+    pub fn build_test(character_stream: Vec<Token>, current_index: usize) -> TokenStream {
+        TokenStream { character_stream: character_stream, current_index: current_index}
     }
 
     fn tokenize(char_stream: Vec<char>) -> Vec<Token> {
@@ -101,8 +105,6 @@ impl Iterator for TokenStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::read;
-
     #[test]
     fn tokenize_numC() {
         let characters = vec!['n', 'u', 'm', 'C', '(', '2', ')'];

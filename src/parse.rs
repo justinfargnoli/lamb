@@ -1,6 +1,7 @@
 use crate::tokenize::{Token, TokenStream};
 use crate::Type;
 
+#[derive(Debug, PartialEq)]
 pub enum AST {
     Anumc,
     AplusC(Box<AST>, Box<AST>),
@@ -19,107 +20,143 @@ pub enum AST {
     },
     AfdC {
         arg_name: String,
-        arg_type: Type,
-        ret_type: Type,
+        arg_type: Box<Type>,
+        ret_type: Box<Type>,
         body: Box<AST>,
     },
 }
 
 impl AST {
-    pub fn build(token_stream: &mut TokenStream) -> Box<AST> {
-        match token_stream.next() {
-            Some(token) => {
-                match token {
-                    Token::TTrue => Box::new(AST::AtrueC),
-                    Token::TFalse => Box::new(AST::AfalseC),
-                    Token::TNumC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast = AST::Anumc;
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(ast)
-                    }
-                    Token::TPlusC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::AplusC(ast1, ast2))
-                    }
-                    Token::TMultC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::AmultC(ast1, ast2))
-                    }
-                    Token::TIfC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast3 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::AifC {
-                            cnd: ast1,
-                            then: ast2,
-                            els: ast3,
-                        })
-                    }
-                    Token::TIdC => {
-                        assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        let mut string_ast;
-                        match token_stream.next().unwrap() {
-                            Token::ID(val) => {
-                                string_ast = Box::new(AST::AidC(val));
-                            }
-                            _ => panic!("String not found!"),
-                        }
-                        assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        string_ast
-                    }
-                    Token::TAppC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        let mut ast1 = AST::build(token_stream);
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        let mut ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::AappC {
-                            func: ast1,
-                            arg: ast2,
-                        })
-                    }
-                    Token::TFdC => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        let mut string_ast;
-                        match token_stream.next().unwrap() {
-                            Token::ID(val) => {
-                                string_ast = Box::new(AST::AidC(val));
-                            }
-                            _ => panic!("String not found!"),
-                        }
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        //TODO: DO THE ARGUMENT TYPE
+	pub fn build(token_stream: &mut TokenStream) -> Box<AST> {
+		match token_stream.next() {
+			Some(token) => {
+				match token {
+					Token::TTrue => Box::new(AST::AtrueC),
+					Token::TFalse => Box::new(AST::AfalseC),
+					Token::TNumC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast = AST::Anumc;
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(ast)
+					}
+					Token::TPlusC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AplusC(ast1, ast2))
+					}
+					Token::TMultC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AmultC(ast1, ast2))
+					}
+					Token::TIfC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast3 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AifC {cnd: ast1, then: ast2, els: ast3}) 
+					}
+					Token::TIdC => {	//TODO: CHECK!!!!
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						assert_eq!(Token::Quote, token_stream.next().unwrap());
+						let mut string_ast;
+						match token_stream.next().unwrap() {
+							Token::ID(val) => {string_ast = Box::new(AST::AidC(val));},
+							_ => panic!("String not found!"),
+						}
+						assert_eq!(Token::Quote, token_stream.next().unwrap());
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						string_ast
+					}
+					Token::TAppC => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut ast1 = AST::build(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut ast2 = AST::build(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(AST::AappC {func: ast1, arg: ast2})
+					}
+					Token::TFdC => {	//TODO: CHECK!!!!
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						assert_eq!(Token::Quote, token_stream.next().unwrap());
+						let mut string_ast;
+						match token_stream.next().unwrap() {
+							Token::ID(val) => {string_ast = val;},
+							_ => panic!("String not found!"),
+						}
+						assert_eq!(Token::Quote, token_stream.next().unwrap());
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						//THE ARGUMENT TYPE
+						let mut arg_type = AST::parse_type(token_stream);
+						// match token_stream.next().unwrap() {
+						// 	Token::NumT => {arg_type = Box::new(Type::NumT);},
+						// 	Token::BoolT => {arg_type = Box::new(Type::BoolT);},
+						// 	Token::FunT => {arg_type = Box::new(Type::FunT);},
+						// 	_ => panic!("Argument type not found!"),
+						// }
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						//THE RETURN TYPE
+						let mut ret_type = AST::parse_type(token_stream);
+						// match token_stream.next().unwrap() {
+						// 	Token::NumT => {ret_type = Box::new(Type::NumT);},
+						// 	Token::BoolT => {ret_type = Box::new(Type::BoolT);},
+						// 	Token::FunT => {ret_type = Box::new(Type::FunT);},
+						// 	_ => panic!("Argument type not found!"),
+						// }
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						
+						let mut ast_body = AST::build(token_stream);
 
-                        assert_eq!(Token::Comma, token_stream.next().unwrap());
-                        //TODO: DO THE RETURN TYPE
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-                        let mut ast_body = AST::build(token_stream);
-
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-
-                        Box::new(AST::AfalseC) //TODO: NOT ACTUALLY THIS
+						Box::new(AST::AfdC {arg_name: string_ast, arg_type: arg_type, ret_type: ret_type, body: ast_body}) //TODO: NOT ACTUALLY THIS
                     }
+					_ => Box::new(AST::AfalseC)	////TODO: THIS should never happen
+				}
+			}
+			None => panic!("No token found")
+		}
+		// unimplemented!()
+	}
+	pub fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
+		match token_stream.next() {
+			Some(token) => {
+				match token {
+					Token::NumT => Box::new(Type::NumT),
+					Token::BoolT => Box::new(Type::BoolT),
+					Token::FunT => {
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+						let mut box1 = AST::parse_type(token_stream);
+						assert_eq!(Token::Comma, token_stream.next().unwrap());
+						let mut box2 = AST::parse_type(token_stream);
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+						Box::new(Type::FunT {arg:box1, ret: box2})
+					}
+					_ => panic!("Argument type not found!"),		
+				}
+			}
+			None => panic!("No token found")
+		}
+	}
+}
 
-                    // AfdC {arg_name: String, arg_type: Type, ret_type: Type, body: Box<AST>},
-                    _ => Box::new(AST::AfalseC), ////TODO: THIS should never happen
-                }
-            }
-            None => panic!("IAUFHI"),
-        }
-        // unimplemented!()
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_1() {	//testing numC(1)
+        let tokens = vec![Token::TNumC, Token::ParenLeft, Token::Number(1), Token::ParenRight];
+        let mut token_stream = TokenStream::build_test(tokens, 0);
+        assert_eq!(AST::build(&mut token_stream), Box::new(AST::Anumc));
     }
 }
