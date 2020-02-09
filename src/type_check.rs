@@ -9,15 +9,19 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         AST::AfalseC => Type::BoolT,
         AST::AplusC(op1, op2) => {
         	if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
-        		Type::NumT;
+        		Type::NumT
         	}
-        	panic!("Types differ in AplusC!")
+        	else {
+        		panic!("Types differ in AplusC!")
+        	}
         }
         AST::AmultC(op1, op2) => {
         	if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
-        		Type::NumT;
+        		Type::NumT
         	}
-        	panic!("Types differ in AmultC!")
+        	else {
+        		panic!("Types differ in AmultC!")
+        	}
         }
         AST::AifC {cnd, then, els} => {
         	let cnd_type = tc(cnd, tenv);
