@@ -43,7 +43,9 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
         		panic!("Variable not saved in type environment")
         	}
         }
+        // AST::AappC {func, arg} => {
 
+        // }
         _ => Type::NumT,
     }
 
