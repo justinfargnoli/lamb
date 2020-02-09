@@ -16,7 +16,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn read_1() {
+    fn read_input_1() {
         let mut character_iter = build("input1.txt")
             .expect("Unable to open file")
             .into_iter();
