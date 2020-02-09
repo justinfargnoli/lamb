@@ -36,7 +36,10 @@ impl AST {
                     Token::TNumC => {
                         assert_eq!(Token::TNumC, token_stream.next().unwrap());
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        assert_eq!(std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)), std::mem::discriminant(&token_stream.next().unwrap()));
+                        assert_eq!(
+                            std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)),
+                            std::mem::discriminant(&token_stream.next().unwrap())
+                        );
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::Anumc)
                     }

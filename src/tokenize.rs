@@ -43,21 +43,37 @@ impl TokenStream {
         }
     }
 
-    pub fn stream(&self) -> &VecDeque<Token> {
-        &self.stream
-    }
-
-    pub fn stream_mut(&mut self) -> &mut VecDeque<Token> {
-        &mut self.stream
-    }
-
     fn tokenize(mut char_stream: VecDeque<char>) -> VecDeque<Token> {
         let mut tokens = VecDeque::new();
         match char_stream.pop_front().unwrap() {
-            '(' => tokens.push_back(Token::ParenLeft),
+            '(' => {
+                tokens.push_back(Token::ParenLeft);
+                let mut num = String::new();
+                loop {
+                    let front = char_stream.pop_front().unwrap();
+                    if front == ')' {
+                        tokens.push_back(Token::Number(num.parse::<u32>().unwrap()));
+                        tokens.push_back(Token::ParenRight);
+                        break;
+                    }
+                    num.push(front);
+                }
+            }
             ')' => tokens.push_back(Token::ParenRight),
             ',' => tokens.push_back(Token::Comma),
-            '\"' => tokens.push_back(Token::Quote),
+            '\"' => {
+                tokens.push_back(Token::Quote);
+                let mut id = String::new();
+                loop {
+                    let next_char = char_stream.pop_front().unwrap();
+                    if next_char == '\"' {
+                        tokens.push_back(Token::ID(id));
+                        tokens.push_back(Token::Quote);
+                        break;
+                    }
+                    id.push(next_char);
+                }
+            }
             'n' => {
                 assert_eq!(char_stream.pop_front().unwrap(), 'u');
                 assert_eq!(char_stream.pop_front().unwrap(), 'm');
@@ -152,7 +168,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tokenize_numC() {
+    fn tokenize_num_c() {
         let characters = VecDeque::from(vec!['n', 'u', 'm', 'C', '(', '2', ')']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -163,9 +179,10 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_idC() {
+    fn tokenize_id_c() {
         let characters = VecDeque::from(vec!['i', 'd', 'C', '\"', 'a', 'b', '\"']);
         let mut token_stream = TokenStream::build(characters);
+        println!("{:?}", token_stream);
 
         assert_eq!(token_stream.next(), Some(Token::TIdC));
         assert_eq!(token_stream.next(), Some(Token::Quote));
@@ -174,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_multC() {
+    fn tokenize_mult_c() {
         let characters = VecDeque::from(vec![
             'm', 'u', 'l', 't', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
@@ -196,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_plusC() {
+    fn tokenize_plus_c() {
         let characters = VecDeque::from(vec![
             'p', 'l', 'u', 's', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
@@ -218,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_trueC() {
+    fn tokenize_true_c() {
         let characters = VecDeque::from(vec!['t', 'r', 'u', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -226,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_falseC() {
+    fn tokenize_false_c() {
         let characters = VecDeque::from(vec!['f', 'a', 'l', 's', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -234,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_ifC() {
+    fn tokenize_if_c() {
         let characters = String::from("ifC(falseC, numC(1), numC(3))")
             .chars()
             .collect();
@@ -244,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_fdC() {
+    fn tokenize_fd_c() {
         let characters = String::from("fdC(\"x\", boolT, boolT, idC(\"x\"))")
             .chars()
             .collect();
@@ -269,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_appC() {
+    fn tokenize_app_c() {
         let characters = String::from("appC(fdC(\"x\", boolT, boolT, idC(\"x\")), falseC)")
             .chars()
             .collect();

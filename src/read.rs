@@ -1,6 +1,6 @@
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{Read, Result};
-use std::collections::VecDeque;
 
 pub fn build(input_file: &str) -> Result<VecDeque<char>> {
     Result::Ok(
