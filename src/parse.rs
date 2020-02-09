@@ -21,8 +21,8 @@ pub enum AST {
     },
     AfdC {
         arg_name: String,
-        arg_type: Type,
-        ret_type: Type,
+        arg_type: Box<Type>,
+        ret_type: Box<Type>,
         body: Box<AST>,
     },
 }
@@ -66,7 +66,8 @@ impl AST {
 						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 						Box::new(AST::AifC {cnd: ast1, then: ast2, els: ast3}) 
 					}
-					Token::TIdC => {
+					Token::TIdC => {	//TODO: CHECK!!!!
+						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
 						assert_eq!(Token::Quote, token_stream.next().unwrap());
 						let mut string_ast;
 						match token_stream.next().unwrap() {
@@ -74,6 +75,7 @@ impl AST {
 							_ => panic!("String not found!"),
 						}
 						assert_eq!(Token::Quote, token_stream.next().unwrap());
+						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 						string_ast
 					}
 					Token::TAppC => {
@@ -84,7 +86,7 @@ impl AST {
 						assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 						Box::new(AST::AappC {func: ast1, arg: ast2})
 					}
-					Token::TFdC => {
+					Token::TFdC => {	//TODO: CHECK!!!!
 						assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
 						assert_eq!(Token::Quote, token_stream.next().unwrap());
 						let mut string_ast;
@@ -112,7 +114,7 @@ impl AST {
 					_ => Box::new(AST::AfalseC)	////TODO: THIS should never happen
 				}
 			}
-			None => panic!("IAUFHI")
+			None => panic!("No token found")
 		}
 		// unimplemented!()
 	}
