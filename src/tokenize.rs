@@ -1,9 +1,14 @@
+use crate::Type;
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
     ParenLeft,
     ParenRight,
     Comma,
     Quote,
+    NumT,
+    BoolT,
+    FunT,
     ID(String),
     Number(u32),
     TTrue,
