@@ -36,6 +36,7 @@ impl TokenStream {
         }
     }
 
+    #[allow(dead_code)] // used for tests in 'parse.rs'
     pub fn build_test(token_stream: VecDeque<Token>, curr_index: usize) -> TokenStream {
         TokenStream {
             stream: token_stream,

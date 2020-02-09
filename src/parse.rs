@@ -117,7 +117,7 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         //THE RETURN TYPE
                         let ret_type = AST::parse_type(token_stream);
-                        
+
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
 
                         let ast_body = AST::build(token_stream);
@@ -182,7 +182,7 @@ mod tests {
     fn parse_2() {
         //testing plusC(numC(1), numC(2))
         let tokens = VecDeque::from(vec![
-        	Token::TPlusC,
+            Token::TPlusC,
             Token::ParenLeft,
             Token::TNumC,
             Token::ParenLeft,
@@ -196,7 +196,10 @@ mod tests {
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(*AST::build(&mut token_stream), AST::AplusC(Box::new(AST::Anumc),Box::new(AST::Anumc)));
+        assert_eq!(
+            *AST::build(&mut token_stream),
+            AST::AplusC(Box::new(AST::Anumc), Box::new(AST::Anumc))
+        );
     }
     #[test]
     #[should_panic]
