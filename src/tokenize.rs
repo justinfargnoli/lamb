@@ -35,7 +35,7 @@ impl TokenStream {
     }
 
     pub fn build_test(character_stream: Vec<Token>, current_index: usize) -> TokenStream {
-        TokenStream { character_stream: character_stream, current_index: current_index}
+        TokenStream { stream: character_stream, current_index: current_index}
     }
 
     fn tokenize(char_stream: Vec<char>) -> Vec<Token> {
@@ -55,7 +55,6 @@ impl TokenStream {
                 } else if next_char == 'C' {
                     tokens.push(Token::TNumC);
                 }
-                panic!();
             }
             'b' => {
                 assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'o');
@@ -80,7 +79,42 @@ impl TokenStream {
                     assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
                     tokens.push(Token::TFdC);
                 }
-                panic!()
+                else {
+                    panic!()
+                }
+            }
+            'p' => {
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'u');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 's');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
+                tokens.push(Token::TPlusC);
+            }
+            'm' => {
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'u');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'l');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 't');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
+                tokens.push(Token::TMultC);
+            }
+            'a' => {
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'p');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'p');
+                assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
+                tokens.push(Token::TAppC);
+            }
+            'i' => {
+                let next_char = TokenStream::next_char(&char_stream, &mut curr_index);
+                if next_char == 'f' {
+                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
+                    tokens.push(Token::TIfC);
+                } else if next_char == 'd' {
+                    assert_eq!(TokenStream::next_char(&char_stream, &mut curr_index), 'C');
+                    tokens.push(Token::TIdC);
+                }
+                else {
+                    panic!()
+                }
             }
             _ => panic!("Your input wasn't able to be converted into a token stream."),
         }
