@@ -4,7 +4,7 @@ use crate::parse::AST;
 use crate::Type;
 use std::collections::HashMap;
 
-pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
+pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
     match *ast {
         AST::AtrueC => Type::BoolT,
         AST::AfalseC => Type::BoolT,
@@ -24,17 +24,15 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
             }
         }
         AST::AifC { cnd, then, els } => {
-            let cnd_type = tc(cnd, tenv);
-            if cnd_type != Type::BoolT {
+            if tc(cnd, tenv) != Type::BoolT {
                 panic!("Condition in an if statement is not boolean!")
+            }
+            let then_type = tc(then, tenv);
+            let else_type = tc(els, tenv);
+            if then_type == else_type {
+                then_type
             } else {
-                let then_type = tc(then, tenv);
-                let else_type = tc(els, tenv);
-                if then_type == else_type {
-                    then_type
-                } else {
-                    panic!("Types differ in then and else part of an if statement!")
-                }
+                panic!("Types differ in then and else part of an if statement!")
             }
         }
         AST::AidC(id) => {
@@ -45,8 +43,8 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
             }
         }
         AST::AappC { func, arg } => {
-            let arg_type = tc(arg, tenv);
             let fun_type = tc(func, tenv);
+            let arg_type = tc(arg, tenv);
             match fun_type {
                 Type::FunT {
                     arg: funT_arg,
@@ -67,13 +65,17 @@ pub fn tc(ast: Box<AST>, tenv: &HashMap<String, Type>) -> Type {
             ret_type,
             body,
         } => {
-            let mut ext_tenv = tenv.clone();
-            let arg_type_clone = arg_type.clone();
-            ext_tenv.insert(arg_name, *arg_type);
-            let body_type = tc(body, &ext_tenv);
-            if body_type == *ret_type {
+            // let ext_tenv = tenv/*.clone()*/;
+            tenv.insert(arg_name.clone(), *arg_type.clone());
+            let body_ret = tc(body, tenv);
+            if body_ret == *ret_type {
+                /*
+                 * Since the body has type checked we can remove the varaible name form the scope to preseve a common understanding of scope.
+                 * This allows us ot avoid cloning the HashMap
+                 */
+                tenv.remove(&arg_name);
                 Type::FunT {
-                    arg: arg_type_clone,
+                    arg: arg_type,
                     ret: ret_type,
                 }
             } else {
