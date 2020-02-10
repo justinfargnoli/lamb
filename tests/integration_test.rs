@@ -122,9 +122,26 @@ fn type_check_input_super() {
 }
 
 #[test]
-fn type_check_input_rec_c() {
+fn type_check_input_rec_c_sumation() {
     assert_eq!(
-        tc200::type_check("tests/inputs/input_rec_c.txt"),
-        Type::BoolT
+        tc200::type_check("tests/inputs/input_rec_c_sumation.txt"),
+        Type::NumT
     );
 }
+
+#[test]
+#[should_panic]
+fn type_check_input_rec_c_fail() {
+    tc200::type_check("tests/inputs/input_rec_c_fail.txt");
+}
+
+#[test]
+fn type_check_input_rec_c_factorial() {
+    assert_eq!(
+        tc200::type_check("tests/inputs/input_rec_c_factorial.txt"),
+        Type::NumT
+    );
+}
+
+
+
