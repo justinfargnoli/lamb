@@ -10,7 +10,7 @@ pub enum Token {
     BoolT,
     FunT,
     ID(String),
-    Number(u32),
+    Number(i32),
     TEqC,
     TTrueC,
     TFalseC,
@@ -52,12 +52,21 @@ impl TokenStream {
             match char_stream.pop_front().unwrap() {
                 '(' => {
                     tokens.push_back(Token::ParenLeft);
-                    let mut num = String::new();
+                    let mut num_str = String::new();
+                    let mut negative = false;
+                    if *char_stream.front().unwrap() == '-' {
+                        negative = true;
+                        char_stream.pop_front().unwrap();
+                    }
                     loop {
                         if char_stream.front().unwrap().to_digit(10).is_some() {
-                            num.push(char_stream.pop_front().unwrap());
-                        } else if !num.is_empty() {
-                            tokens.push_back(Token::Number(num.parse::<u32>().unwrap()));
+                            num_str.push(char_stream.pop_front().unwrap());
+                        } else if !num_str.is_empty() {
+                            let mut num = num_str.parse::<i32>().unwrap();
+                            if negative {
+                                num *= -1;
+                            }
+                            tokens.push_back(Token::Number(num));
                             break;
                         } else {
                             break;
@@ -159,7 +168,8 @@ impl TokenStream {
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
                     tokens.push_back(Token::TEqC);
                 }
-                'r' => { // todo: write tests for this
+                'r' => {
+                    // todo: write tests for this
                     assert_eq!(char_stream.pop_front().unwrap(), 'e');
                     assert_eq!(char_stream.pop_front().unwrap(), 'c');
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
@@ -193,6 +203,17 @@ mod tests {
         assert_eq!(token_stream.next(), Some(Token::TNumC));
         assert_eq!(token_stream.next(), Some(Token::ParenLeft));
         assert_eq!(token_stream.next(), Some(Token::Number(2)));
+        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+    }
+
+    #[test]
+    fn tokenize_num_c_negative() {
+        let characters = VecDeque::from(vec!['n', 'u', 'm', 'C', '(', '-', '2', ')']);
+        let mut token_stream = TokenStream::build(characters);
+
+        assert_eq!(token_stream.next(), Some(Token::TNumC));
+        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::Number(-2)));
         assert_eq!(token_stream.next(), Some(Token::ParenRight));
     }
 
