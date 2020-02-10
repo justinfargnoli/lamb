@@ -66,6 +66,26 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 _ => panic!("Not a function in appC"),
             }
         }
+        AST::ArecC {
+        	func_name,
+        	arg_name,
+        	arg_type, 
+        	ret_type, 
+        	body,
+        	func_use,
+        } => {
+        	tenv.insert(func_name.clone(), Type::FunT{arg: arg_type.clone(), ret: ret_type.clone()});
+        	tenv.insert(arg_name.clone(), *arg_type.clone());
+        	if *ret_type == tc(body, tenv) {
+        		tc(func_use, tenv);
+    			tenv.remove(&func_name);
+    			tenv.remove(&arg_name);
+        		*ret_type
+        	}
+        	else {
+        		panic!("Return type of recursive function does not match return type of the body!");
+        	}
+        }
         AST::AfdC {
             arg_name,
             arg_type,

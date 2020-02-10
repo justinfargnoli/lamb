@@ -25,6 +25,14 @@ pub enum AST {
         ret_type: Box<Type>,
         body: Box<AST>,
     },
+    ArecC {
+    	func_name: String,
+    	arg_name: String,
+    	arg_type: Box<Type>,
+        ret_type: Box<Type>,
+        body: Box<AST>,
+        func_use: Box<AST>,
+    }
 }
 
 impl AST {
@@ -139,6 +147,51 @@ impl AST {
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AeqC(ast1, ast2))
+                    }
+                    Token::TRecC => {
+                    	assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                    	// 1st parameter
+                        assert_eq!(Token::Quote, token_stream.next().unwrap());
+                        let rec_func_name;
+                        match token_stream.next().unwrap() {
+                            Token::ID(val) => {		//Token::ID, not to be confused with idC
+                                rec_func_name = val;
+                            }
+                            _ => panic!("String not found!"),
+                        }
+                        assert_eq!(Token::Quote, token_stream.next().unwrap());
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        // 2nd parameter
+                        assert_eq!(Token::Quote, token_stream.next().unwrap());
+                        let rec_arg_name;
+                        match token_stream.next().unwrap() {
+                            Token::ID(val) => {		//Token::ID, not to be confused with idC
+                                rec_arg_name = val;
+                            }
+                            _ => panic!("String not found!"),
+                        }
+                        assert_eq!(Token::Quote, token_stream.next().unwrap());
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        // 3rd parameter
+                        let rec_arg_type = AST::parse_type(token_stream);
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        // 4th parameter
+                        let rec_ret_type = AST::parse_type(token_stream);
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        // 5th parameter
+                        let rec_body_ast = AST::build(token_stream);
+                        assert_eq!(Token::Comma, token_stream.next().unwrap());
+                        // 6th parameter
+                        let rec_func_use_ast = AST::build(token_stream);
+                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        Box::new(AST::ArecC {
+					    	func_name: rec_func_name,
+					    	arg_name: rec_arg_name,
+					    	arg_type: rec_arg_type,
+					        ret_type: rec_ret_type,
+					        body: rec_body_ast,
+					        func_use: rec_func_use_ast,
+                        })
                     }
                     _ => panic!("Parsing error"), ////TODO: THIS should never happen
                 }

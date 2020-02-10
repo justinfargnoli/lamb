@@ -120,3 +120,11 @@ fn type_check_input_super() {
         Type::BoolT
     );
 }
+
+#[test]
+fn type_check_input_rec_c() {
+    assert_eq!(
+        tc200::type_check("tests/inputs/input_rec_c.txt"),
+        Type::BoolT
+    );
+}

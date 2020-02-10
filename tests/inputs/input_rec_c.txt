@@ -1,0 +1,1 @@
+recC("S", "num", numT, numT, ifC(eqC(idC("num"),numC(0)), numC(0), plusC(idC("num"), appC(idC("S"), plusC(idC("num"), numC(-1))))),appC(idC("S"), numC(10)))

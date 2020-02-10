@@ -165,7 +165,7 @@ impl TokenStream {
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
                     tokens.push_back(Token::TRecC);
                 }
-                ' ' => continue,
+                ' ' | '\t' |'\n' | '\r' => continue,
                 _ => panic!("Your input wasn't able to be converted into a token stream."),
             }
         }
