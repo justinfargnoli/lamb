@@ -88,13 +88,16 @@ fn type_check_input_15() {
 
 #[test]
 fn type_check_input_basic() {
-    assert_eq!(tc200::type_check("tests/inputs/input15.txt"), Type::BoolT);
+    assert_eq!(
+        tc200::type_check("tests/inputs/input_basic.txt"),
+        Type::BoolT
+    );
 }
 
 #[test]
 fn type_check_input_medium() {
     assert_eq!(
-        tc200::type_check("tests/inputs/input15.txt"),
+        tc200::type_check("tests/inputs/input_medium.txt"),
         Type::FunT {
             arg: Box::new(Type::NumT),
             ret: Box::new(Type::NumT)
@@ -104,5 +107,16 @@ fn type_check_input_medium() {
 
 #[test]
 fn type_check_input_advanced() {
-    assert_eq!(tc200::type_check("tests/inputs/input15.txt"), Type::NumT);
+    assert_eq!(
+        tc200::type_check("tests/inputs/input_advanced.txt"),
+        Type::NumT
+    );
+}
+
+#[test]
+fn type_check_input_super() {
+    assert_eq!(
+        tc200::type_check("tests/inputs/input_super.txt"),
+        Type::BoolT
+    );
 }

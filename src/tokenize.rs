@@ -21,6 +21,7 @@ pub enum Token {
     TIdC,
     TAppC,
     TFdC,
+    TRecC,
 }
 
 #[derive(Debug, PartialEq)]
@@ -157,6 +158,12 @@ impl TokenStream {
                     assert_eq!(char_stream.pop_front().unwrap(), 'q');
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
                     tokens.push_back(Token::TEqC);
+                }
+                'r' => { // todo: write tests for this
+                    assert_eq!(char_stream.pop_front().unwrap(), 'e');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'c');
+                    assert_eq!(char_stream.pop_front().unwrap(), 'C');
+                    tokens.push_back(Token::TRecC);
                 }
                 ' ' => continue,
                 _ => panic!("Your input wasn't able to be converted into a token stream."),
