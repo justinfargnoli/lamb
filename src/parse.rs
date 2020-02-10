@@ -26,13 +26,13 @@ pub enum AST {
         body: Box<AST>,
     },
     ArecC {
-    	func_name: String,
-    	arg_name: String,
-    	arg_type: Box<Type>,
+        func_name: String,
+        arg_name: String,
+        arg_type: Box<Type>,
         ret_type: Box<Type>,
         body: Box<AST>,
         func_use: Box<AST>,
-    }
+    },
 }
 
 impl AST {
@@ -135,8 +135,8 @@ impl AST {
 
                         Box::new(AST::AfdC {
                             arg_name: string_ast,
-                            arg_type: arg_type,
-                            ret_type: ret_type,
+                            arg_type,
+                            ret_type,
                             body: ast_body,
                         })
                     }
@@ -149,12 +149,13 @@ impl AST {
                         Box::new(AST::AeqC(ast1, ast2))
                     }
                     Token::TRecC => {
-                    	assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                    	// 1st parameter
+                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        // 1st parameter
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let rec_func_name;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {		//Token::ID, not to be confused with idC
+                            Token::ID(val) => {
+                                //Token::ID, not to be confused with idC
                                 rec_func_name = val;
                             }
                             _ => panic!("String not found!"),
@@ -165,7 +166,8 @@ impl AST {
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let rec_arg_name;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {		//Token::ID, not to be confused with idC
+                            Token::ID(val) => {
+                                //Token::ID, not to be confused with idC
                                 rec_arg_name = val;
                             }
                             _ => panic!("String not found!"),
@@ -185,12 +187,12 @@ impl AST {
                         let rec_func_use_ast = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::ArecC {
-					    	func_name: rec_func_name,
-					    	arg_name: rec_arg_name,
-					    	arg_type: rec_arg_type,
-					        ret_type: rec_ret_type,
-					        body: rec_body_ast,
-					        func_use: rec_func_use_ast,
+                            func_name: rec_func_name,
+                            arg_name: rec_arg_name,
+                            arg_type: rec_arg_type,
+                            ret_type: rec_ret_type,
+                            body: rec_body_ast,
+                            func_use: rec_func_use_ast,
                         })
                     }
                     _ => panic!("Parsing error"), ////TODO: THIS should never happen

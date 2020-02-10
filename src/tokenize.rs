@@ -42,7 +42,7 @@ impl TokenStream {
     pub fn build_test(token_stream: VecDeque<Token>, curr_index: usize) -> TokenStream {
         TokenStream {
             stream: token_stream,
-            curr_index: curr_index,
+            curr_index,
         }
     }
 
@@ -59,7 +59,7 @@ impl TokenStream {
                         char_stream.pop_front().unwrap();
                     }
                     loop {
-                        if char_stream.front().unwrap().to_digit(10).is_some() {
+                        if char_stream.front().unwrap().is_digit(10) {
                             num_str.push(char_stream.pop_front().unwrap());
                         } else if !num_str.is_empty() {
                             let mut num = num_str.parse::<i32>().unwrap();
@@ -175,7 +175,7 @@ impl TokenStream {
                     assert_eq!(char_stream.pop_front().unwrap(), 'C');
                     tokens.push_back(Token::TRecC);
                 }
-                ' ' | '\t' |'\n' | '\r' => continue,
+                ' ' | '\t' | '\n' | '\r' => continue,
                 _ => panic!("Your input wasn't able to be converted into a token stream."),
             }
         }

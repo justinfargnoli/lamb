@@ -142,6 +142,3 @@ fn type_check_input_rec_c_factorial() {
         Type::NumT
     );
 }
-
-
-
