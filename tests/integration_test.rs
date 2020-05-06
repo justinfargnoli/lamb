@@ -1,4 +1,4 @@
-use tc200::Type;
+use tc200::type_check::Type;
 
 #[test]
 fn type_check_input_1() {

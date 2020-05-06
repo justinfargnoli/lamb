@@ -1,5 +1,5 @@
+use super::type_check::Type;
 use crate::tokenize::{Token, TokenStream};
-use crate::Type;
 
 #[derive(Debug, PartialEq)]
 pub enum AST {

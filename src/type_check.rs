@@ -1,8 +1,14 @@
 #![allow(non_snake_case)]
 
 use crate::parse::AST;
-use crate::Type;
 use std::collections::HashMap;
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Type {
+    NumT,
+    BoolT,
+    FunT { arg: Box<Type>, ret: Box<Type> },
+}
 
 pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
     match *ast {
