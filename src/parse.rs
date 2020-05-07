@@ -36,12 +36,12 @@ pub enum AST {
 }
 
 impl AST {
-    pub fn build(token_stream: &mut TokenStream) -> Box<AST> {
+    pub fn build(token_stream: &mut TokenStream) -> AST {
         match token_stream.next() {
             Some(token) => {
                 match token {
-                    Token::TrueC => Box::new(AST::TrueC),
-                    Token::FalseC => Box::new(AST::FalseC),
+                    Token::TrueC => AST::TrueC,
+                    Token::FalseC => AST::FalseC,
                     Token::NumC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(
@@ -49,7 +49,7 @@ impl AST {
                             std::mem::discriminant(&token_stream.next().unwrap())
                         );
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::NumC)
+                        AST::NumC
                     }
                     Token::PlusC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -57,7 +57,7 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::PlusC(ast1, ast2))
+                        AST::PlusC(Box::new(ast1), Box::new(ast2))
                     }
                     Token::MultC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -65,7 +65,7 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::MultC(ast1, ast2))
+                        AST::MultC(Box::new(ast1), Box::new(ast2))
                     }
                     Token::IfC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -75,11 +75,11 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast3 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::IfC {
-                            cnd: ast1,
-                            then: ast2,
-                            els: ast3,
-                        })
+                        AST::IfC {
+                            cnd: Box::new(ast1),
+                            then: Box::new(ast2),
+                            els: Box::new(ast3),
+                        }
                     }
                     Token::IdC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -87,7 +87,7 @@ impl AST {
                         let string_ast;
                         match token_stream.next().unwrap() {
                             Token::ID(id) => {
-                                string_ast = Box::new(AST::IdC(id));
+                                string_ast = AST::IdC(id);
                             }
                             _ => panic!("String not found!"),
                         }
@@ -101,10 +101,10 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::AppC {
-                            func: ast1,
-                            arg: ast2,
-                        })
+                        AST::AppC {
+                            func: Box::new(ast1),
+                            arg: Box::new(ast2),
+                        }
                     }
                     Token::FdC => {
                         //THE ARGUMENT NAME
@@ -133,12 +133,12 @@ impl AST {
 
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-                        Box::new(AST::FdC {
+                        AST::FdC {
                             arg_name: string_ast,
                             arg_type,
                             ret_type,
-                            body: ast_body,
-                        })
+                            body: Box::new(ast_body),
+                        }
                     }
                     Token::EqC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -146,7 +146,7 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::EqC(ast1, ast2))
+                        AST::EqC(Box::new(ast1), Box::new(ast2))
                     }
                     Token::RecC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -186,14 +186,14 @@ impl AST {
                         // 6th parameter
                         let rec_func_use_ast = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        Box::new(AST::RecC {
+                        AST::RecC {
                             func_name: rec_func_name,
                             arg_name: rec_arg_name,
                             arg_type: rec_arg_type,
                             ret_type: rec_ret_type,
-                            body: rec_body_ast,
-                            func_use: rec_func_use_ast,
-                        })
+                            body: Box::new(rec_body_ast),
+                            func_use: Box::new(rec_func_use_ast),
+                        }
                     }
                     _ => panic!("Parsing error"), ////TODO: THIS should never happen
                 }
@@ -240,7 +240,7 @@ mod tests {
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(*AST::build(&mut token_stream), AST::NumC);
+        assert_eq!(AST::build(&mut token_stream), AST::NumC);
     }
 
     #[test]
@@ -262,7 +262,7 @@ mod tests {
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
-            *AST::build(&mut token_stream),
+            AST::build(&mut token_stream),
             AST::PlusC(Box::new(AST::NumC), Box::new(AST::NumC))
         );
     }
@@ -305,7 +305,7 @@ mod tests {
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
-            *AST::build(&mut token_stream),
+            AST::build(&mut token_stream),
             AST::MultC(Box::new(AST::NumC), Box::new(AST::NumC))
         );
     }
@@ -347,7 +347,7 @@ mod tests {
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
-            *AST::build(&mut token_stream),
+            AST::build(&mut token_stream),
             AST::IfC {
                 cnd: Box::new(AST::TrueC),
                 then: Box::new(AST::TrueC),
@@ -383,7 +383,7 @@ mod tests {
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(*AST::build(&mut token_stream), AST::IdC("x".to_string()));
+        assert_eq!(AST::build(&mut token_stream), AST::IdC("x".to_string()));
     }
     #[test]
     #[should_panic]
