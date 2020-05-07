@@ -12,31 +12,31 @@ pub enum Type {
 
 pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
     match *ast {
-        AST::AtrueC => Type::BoolT,
-        AST::AfalseC => Type::BoolT,
-        AST::Anumc => Type::NumT,
-        AST::AplusC(op1, op2) => {
+        AST::TrueC => Type::BoolT,
+        AST::FalseC => Type::BoolT,
+        AST::NumC => Type::NumT,
+        AST::PlusC(op1, op2) => {
             if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
                 Type::NumT
             } else {
-                panic!("Types differ in AplusC!")
+                panic!("Types differ in PlusC!")
             }
         }
-        AST::AmultC(op1, op2) => {
+        AST::MultC(op1, op2) => {
             if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
                 Type::NumT
             } else {
-                panic!("Types differ in AmultC!")
+                panic!("Types differ in MultC!")
             }
         }
-        AST::AeqC(operand1, operand2) => {
+        AST::EqC(operand1, operand2) => {
             if tc(operand1, tenv) == tc(operand2, tenv) {
                 Type::BoolT
             } else {
-                panic!("Types differ in AmultC!")
+                panic!("Types differ in MultC!")
             }
         }
-        AST::AifC { cnd, then, els } => {
+        AST::IfC { cnd, then, els } => {
             if tc(cnd, tenv) != Type::BoolT {
                 panic!("Condition in an if statement is not boolean!")
             }
@@ -48,14 +48,14 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Types differ in then and else part of an if statement!")
             }
         }
-        AST::AidC(id) => {
+        AST::IdC(id) => {
             if tenv.contains_key(&id) {
                 tenv[&id].clone()
             } else {
                 panic!("Variable not saved in type environment")
             }
         }
-        AST::AappC { func, arg } => {
+        AST::AppC { func, arg } => {
             let fun_type = tc(func, tenv);
             let arg_type = tc(arg, tenv);
             match fun_type {
@@ -72,7 +72,7 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 _ => panic!("Not a function in appC"),
             }
         }
-        AST::ArecC {
+        AST::RecC {
             func_name,
             arg_name,
             arg_type,
@@ -97,7 +97,7 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Return type of recursive function does not match return type of the body!");
             }
         }
-        AST::AfdC {
+        AST::FdC {
             arg_name,
             arg_type,
             ret_type,
@@ -129,14 +129,14 @@ mod tests {
 
     #[test]
     fn tc_eq_c() {
-        let input = Box::new(AST::AeqC(Box::new(AST::Anumc), Box::new(AST::Anumc)));
+        let input = Box::new(AST::EqC(Box::new(AST::NumC), Box::new(AST::NumC)));
         assert_eq!(tc(input, &mut HashMap::new()), Type::BoolT);
     }
 
     #[test]
     #[should_panic]
     fn tc_eq_c_fail() {
-        let input = Box::new(AST::AeqC(Box::new(AST::AtrueC), Box::new(AST::Anumc)));
+        let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC)));
         tc(input, &mut HashMap::new());
     }
 }
