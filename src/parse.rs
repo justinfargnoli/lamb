@@ -40,9 +40,9 @@ impl AST {
         match token_stream.next() {
             Some(token) => {
                 match token {
-                    Token::TTrueC => Box::new(AST::AtrueC),
-                    Token::TFalseC => Box::new(AST::AfalseC),
-                    Token::TNumC => {
+                    Token::TrueC => Box::new(AST::AtrueC),
+                    Token::FalseC => Box::new(AST::AfalseC),
+                    Token::NumC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(
                             std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)),
@@ -51,7 +51,7 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::Anumc)
                     }
-                    Token::TPlusC => {
+                    Token::PlusC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -59,7 +59,7 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AplusC(ast1, ast2))
                     }
-                    Token::TMultC => {
+                    Token::MultC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -67,7 +67,7 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AmultC(ast1, ast2))
                     }
-                    Token::TIfC => {
+                    Token::IfC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -81,7 +81,7 @@ impl AST {
                             els: ast3,
                         })
                     }
-                    Token::TIdC => {
+                    Token::IdC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
@@ -95,7 +95,7 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         string_ast
                     }
-                    Token::TAppC => {
+                    Token::AppC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -106,7 +106,7 @@ impl AST {
                             arg: ast2,
                         })
                     }
-                    Token::TFdC => {
+                    Token::FdC => {
                         //THE ARGUMENT NAME
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
@@ -140,7 +140,7 @@ impl AST {
                             body: ast_body,
                         })
                     }
-                    Token::TEqC => {
+                    Token::EqC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -148,7 +148,7 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         Box::new(AST::AeqC(ast1, ast2))
                     }
-                    Token::TRecC => {
+                    Token::RecC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         // 1st parameter
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
@@ -234,7 +234,7 @@ mod tests {
     fn parse_1() {
         //testing numC(1)
         let tokens = VecDeque::from(vec![
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
@@ -247,14 +247,14 @@ mod tests {
     fn parse_2() {
         //testing plusC(numC(1), numC(2))
         let tokens = VecDeque::from(vec![
-            Token::TPlusC,
+            Token::PlusC,
             Token::ParenLeft,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
             Token::Comma,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
@@ -272,11 +272,11 @@ mod tests {
     fn parse_3() {
         //testing plusC(1, numC(2)), this should panic
         let tokens = VecDeque::from(vec![
-            Token::TPlusC,
+            Token::PlusC,
             Token::ParenLeft,
             Token::Number(1),
             Token::Comma,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
@@ -290,14 +290,14 @@ mod tests {
     fn parse_4() {
         //testing multC(numC(1), numC(2))
         let tokens = VecDeque::from(vec![
-            Token::TMultC,
+            Token::MultC,
             Token::ParenLeft,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
             Token::Comma,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
@@ -315,14 +315,14 @@ mod tests {
     fn parse_plus_c() {
         //testing plusC(numC(1), numC(2) -> this should panic (missing right parenthesis)
         let tokens = VecDeque::from(vec![
-            Token::TPlusC,
+            Token::PlusC,
             Token::ParenLeft,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
             Token::Comma,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
@@ -336,13 +336,13 @@ mod tests {
     fn parse_if_c_1() {
         //testing if(true, true, false)
         let tokens = VecDeque::from(vec![
-            Token::TIfC,
+            Token::IfC,
             Token::ParenLeft,
-            Token::TTrueC,
+            Token::TrueC,
             Token::Comma,
-            Token::TTrueC,
+            Token::TrueC,
             Token::Comma,
-            Token::TFalseC,
+            Token::FalseC,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
@@ -360,12 +360,12 @@ mod tests {
     fn parse_if_c_2() {
         //testing if(true, true false)
         let tokens = VecDeque::from(vec![
-            Token::TIfC,
+            Token::IfC,
             Token::ParenLeft,
-            Token::TTrueC,
+            Token::TrueC,
             Token::Comma,
-            Token::TTrueC,
-            Token::TFalseC,
+            Token::TrueC,
+            Token::FalseC,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
@@ -375,7 +375,7 @@ mod tests {
     fn parse_8() {
         //testing id("x")
         let tokens = VecDeque::from(vec![
-            Token::TIdC,
+            Token::IdC,
             Token::ParenLeft,
             Token::Quote,
             Token::ID("x".to_string()),
@@ -390,7 +390,7 @@ mod tests {
     fn parse_9() {
         //testing id("x)
         let tokens = VecDeque::from(vec![
-            Token::TIdC,
+            Token::IdC,
             Token::ParenLeft,
             Token::Quote,
             Token::ID("x".to_string()),
@@ -404,14 +404,14 @@ mod tests {
     #[test]
     fn parse_eq_c() {
         let tokens = VecDeque::from(vec![
-            Token::TEqC,
+            Token::EqC,
             Token::ParenLeft,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
             Token::Comma,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
@@ -425,13 +425,13 @@ mod tests {
     #[should_panic]
     fn parse_eq_c_fail() {
         let tokens = VecDeque::from(vec![
-            Token::TEqC,
+            Token::EqC,
             Token::ParenLeft,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(1),
             Token::ParenRight,
-            Token::TNumC,
+            Token::NumC,
             Token::ParenLeft,
             Token::Number(2),
             Token::ParenRight,
