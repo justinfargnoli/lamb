@@ -10,7 +10,7 @@ pub enum Token {
     BoolT,
     FunT,
     ID(String),
-    Number(i32),
+    Number(i64),
     EqC,
     TrueC,
     FalseC,
@@ -62,7 +62,7 @@ impl TokenStream {
                         if char_stream.front().unwrap().is_digit(10) {
                             num_str.push(char_stream.pop_front().unwrap());
                         } else if !num_str.is_empty() {
-                            let mut num = num_str.parse::<i32>().unwrap();
+                            let mut num = num_str.parse::<i64>().unwrap();
                             if negative {
                                 num *= -1;
                             }
