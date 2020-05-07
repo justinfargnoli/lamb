@@ -1,1 +1,12 @@
-appC(fdC("n", numT, numT, multC(numC(3), idC("n"))), numC(5))
+appC(
+    fdC(
+        "n", 
+        numT, 
+        numT, 
+        multC(
+            numC(3), 
+            idC("n")
+        )
+    ), 
+    numC(5)
+)
