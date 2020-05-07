@@ -14,7 +14,7 @@ pub fn tc(ast: AST, tenv: &mut HashMap<String, Type>) -> Type {
     match ast {
         AST::TrueC => Type::BoolT,
         AST::FalseC => Type::BoolT,
-        AST::NumC => Type::NumT,
+        AST::NumC(_) => Type::NumT,
         AST::PlusC(op1, op2) => {
             if tc(*op1, tenv) == Type::NumT && tc(*op2, tenv) == Type::NumT {
                 Type::NumT
@@ -129,14 +129,14 @@ mod tests {
 
     #[test]
     fn tc_eq_c() {
-        let input = Box::new(AST::EqC(Box::new(AST::NumC), Box::new(AST::NumC)));
+        let input = Box::new(AST::EqC(Box::new(AST::NumC(0)), Box::new(AST::NumC(-5))));
         assert_eq!(tc(*input, &mut HashMap::new()), Type::BoolT);
     }
 
     #[test]
     #[should_panic]
     fn tc_eq_c_fail() {
-        let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC)));
+        let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC(-984))));
         tc(*input, &mut HashMap::new());
     }
 }

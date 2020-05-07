@@ -3,7 +3,7 @@ use crate::tokenize::{Token, TokenStream};
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
-    NumC,
+    NumC(i64),
     PlusC(Box<AST>, Box<AST>),
     MultC(Box<AST>, Box<AST>),
     TrueC,
@@ -44,12 +44,12 @@ impl AST {
                     Token::FalseC => AST::FalseC,
                     Token::NumC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        assert_eq!(
-                            std::mem::discriminant(&Token::Number(0 /* value doesn't matter */)),
-                            std::mem::discriminant(&token_stream.next().unwrap())
-                        );
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::NumC
+                        if let Token::Number(number) = token_stream.next().unwrap() {
+                            assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                            AST::NumC(number)
+                        } else {
+                            panic!("Number not found in NumC")
+                        }
                     }
                     Token::PlusC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -240,7 +240,7 @@ mod tests {
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(AST::build(&mut token_stream), AST::NumC);
+        assert_eq!(AST::build(&mut token_stream), AST::NumC(1));
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::PlusC(Box::new(AST::NumC), Box::new(AST::NumC))
+            AST::PlusC(Box::new(AST::NumC(1)), Box::new(AST::NumC(2)))
         );
     }
 
@@ -306,7 +306,7 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::MultC(Box::new(AST::NumC), Box::new(AST::NumC))
+            AST::MultC(Box::new(AST::NumC(1)), Box::new(AST::NumC(2)))
         );
     }
 
