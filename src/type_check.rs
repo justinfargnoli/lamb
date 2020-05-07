@@ -10,38 +10,38 @@ pub enum Type {
     FunT { arg: Box<Type>, ret: Box<Type> },
 }
 
-pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
-    match *ast {
+pub fn tc(ast: AST, tenv: &mut HashMap<String, Type>) -> Type {
+    match ast {
         AST::TrueC => Type::BoolT,
         AST::FalseC => Type::BoolT,
         AST::NumC => Type::NumT,
         AST::PlusC(op1, op2) => {
-            if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
+            if tc(*op1, tenv) == Type::NumT && tc(*op2, tenv) == Type::NumT {
                 Type::NumT
             } else {
                 panic!("Types differ in PlusC!")
             }
         }
         AST::MultC(op1, op2) => {
-            if tc(op1, tenv) == Type::NumT && tc(op2, tenv) == Type::NumT {
+            if tc(*op1, tenv) == Type::NumT && tc(*op2, tenv) == Type::NumT {
                 Type::NumT
             } else {
                 panic!("Types differ in MultC!")
             }
         }
         AST::EqC(operand1, operand2) => {
-            if tc(operand1, tenv) == tc(operand2, tenv) {
+            if tc(*operand1, tenv) == tc(*operand2, tenv) {
                 Type::BoolT
             } else {
                 panic!("Types differ in MultC!")
             }
         }
         AST::IfC { cnd, then, els } => {
-            if tc(cnd, tenv) != Type::BoolT {
+            if tc(*cnd, tenv) != Type::BoolT {
                 panic!("Condition in an if statement is not boolean!")
             }
-            let then_type = tc(then, tenv);
-            let else_type = tc(els, tenv);
+            let then_type = tc(*then, tenv);
+            let else_type = tc(*els, tenv);
             if then_type == else_type {
                 then_type
             } else {
@@ -56,8 +56,8 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
             }
         }
         AST::AppC { func, arg } => {
-            let fun_type = tc(func, tenv);
-            let arg_type = tc(arg, tenv);
+            let fun_type = tc(*func, tenv);
+            let arg_type = tc(*arg, tenv);
             match fun_type {
                 Type::FunT {
                     arg: funT_arg,
@@ -88,8 +88,8 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
                 },
             );
             tenv.insert(arg_name.clone(), *arg_type);
-            if *ret_type == tc(body, tenv) {
-                tc(func_use, tenv);
+            if *ret_type == tc(*body, tenv) {
+                tc(*func_use, tenv);
                 tenv.remove(&func_name);
                 tenv.remove(&arg_name);
                 *ret_type
@@ -105,7 +105,7 @@ pub fn tc(ast: Box<AST>, tenv: &mut HashMap<String, Type>) -> Type {
         } => {
             // let ext_tenv = tenv/*.clone()*/;
             tenv.insert(arg_name.clone(), *arg_type.clone());
-            let body_ret = tc(body, tenv);
+            let body_ret = tc(*body, tenv);
             if body_ret == *ret_type {
                 /*
                  * Since the body has type checked we can remove the varaible name form the scope to preseve a common understanding of scope.
@@ -130,13 +130,13 @@ mod tests {
     #[test]
     fn tc_eq_c() {
         let input = Box::new(AST::EqC(Box::new(AST::NumC), Box::new(AST::NumC)));
-        assert_eq!(tc(input, &mut HashMap::new()), Type::BoolT);
+        assert_eq!(tc(*input, &mut HashMap::new()), Type::BoolT);
     }
 
     #[test]
     #[should_panic]
     fn tc_eq_c_fail() {
         let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC)));
-        tc(input, &mut HashMap::new());
+        tc(*input, &mut HashMap::new());
     }
 }
