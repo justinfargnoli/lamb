@@ -83,16 +83,16 @@ pub fn tc(ast: AST, tenv: &mut HashMap<String, Type>) -> Type {
             tenv.insert(
                 func_name.clone(),
                 Type::FunT {
-                    arg: arg_type.clone(),
-                    ret: ret_type.clone(),
+                    arg: Box::new(arg_type.clone()),
+                    ret: Box::new(ret_type.clone()),
                 },
             );
-            tenv.insert(arg_name.clone(), *arg_type);
-            if *ret_type == tc(*body, tenv) {
+            tenv.insert(arg_name.clone(), arg_type);
+            if ret_type == tc(*body, tenv) {
                 tc(*func_use, tenv);
                 tenv.remove(&func_name);
                 tenv.remove(&arg_name);
-                *ret_type
+                ret_type
             } else {
                 panic!("Return type of recursive function does not match return type of the body!");
             }
@@ -104,17 +104,17 @@ pub fn tc(ast: AST, tenv: &mut HashMap<String, Type>) -> Type {
             body,
         } => {
             // let ext_tenv = tenv/*.clone()*/;
-            tenv.insert(arg_name.clone(), *arg_type.clone());
+            tenv.insert(arg_name.clone(), arg_type.clone());
             let body_ret = tc(*body, tenv);
-            if body_ret == *ret_type {
+            if body_ret == ret_type {
                 /*
                  * Since the body has type checked we can remove the varaible name form the scope to preseve a common understanding of scope.
                  * This allows us ot avoid cloning the HashMap
                  */
                 tenv.remove(&arg_name);
                 Type::FunT {
-                    arg: arg_type,
-                    ret: ret_type,
+                    arg: Box::new(arg_type),
+                    ret: Box::new(ret_type),
                 }
             } else {
                 panic!("Body type doesn't match declared type")

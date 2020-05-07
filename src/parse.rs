@@ -21,15 +21,15 @@ pub enum AST {
     },
     FdC {
         arg_name: String,
-        arg_type: Box<Type>,
-        ret_type: Box<Type>,
+        arg_type: Type,
+        ret_type: Type,
         body: Box<AST>,
     },
     RecC {
         func_name: String,
         arg_name: String,
-        arg_type: Box<Type>,
-        ret_type: Box<Type>,
+        arg_type: Type,
+        ret_type: Type,
         body: Box<AST>,
         func_use: Box<AST>,
     },
@@ -202,21 +202,21 @@ impl AST {
         }
     }
 
-    fn parse_type(token_stream: &mut TokenStream) -> Box<Type> {
+    fn parse_type(token_stream: &mut TokenStream) -> Type {
         match token_stream.next() {
             Some(token) => match token {
-                Token::NumT => Box::new(Type::NumT),
-                Token::BoolT => Box::new(Type::BoolT),
+                Token::NumT => Type::NumT,
+                Token::BoolT => Type::BoolT,
                 Token::FunT => {
                     assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                     let box1 = AST::parse_type(token_stream);
                     assert_eq!(Token::Comma, token_stream.next().unwrap());
                     let box2 = AST::parse_type(token_stream);
                     assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                    Box::new(Type::FunT {
-                        arg: box1,
-                        ret: box2,
-                    })
+                    Type::FunT {
+                        arg: Box::new(box1),
+                        ret: Box::new(box2),
+                    }
                 }
                 _ => panic!("Argument type not found!"),
             },
