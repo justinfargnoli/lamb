@@ -1,7 +1,7 @@
 use super::type_check::Type;
 use crate::tokenize::{Token, TokenStream};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum AST {
     NumC(i64),
     PlusC(Box<AST>, Box<AST>),
