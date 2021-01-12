@@ -5,7 +5,6 @@ mod tokenize;
 pub mod type_check;
 
 use parse::AST;
-use std::collections::HashMap;
 use tokenize::TokenStream;
 use type_check::Type;
 
@@ -13,12 +12,18 @@ pub fn type_check(input_file: &str) -> Type {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::tc(ast, &mut HashMap::new())
+    type_check::tc(&ast)
+}
+
+pub fn check(input_file: &str) -> Type {
+    let characters = read::build(input_file).unwrap();
+    let mut tokenizer = TokenStream::build(characters);
+    let ast = AST::build(&mut tokenizer);
+    type_check::tc(&ast)
 }
 
 pub fn compile(input_file: &str) {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
-    let ast = AST::build(&mut tokenizer);
-    codegen::codegen(&ast);
+    let _ast = AST::build(&mut tokenizer);
 }
