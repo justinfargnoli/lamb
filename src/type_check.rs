@@ -11,7 +11,7 @@ pub enum Type {
 }
 
 pub fn tc(ast: &AST) -> Type {
-    return tc_helper(ast, &mut HashMap::new());
+    tc_helper(ast, &mut HashMap::new())
 }
 
 fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {

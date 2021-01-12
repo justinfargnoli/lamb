@@ -88,10 +88,7 @@ fn type_check_input_15() {
 
 #[test]
 fn type_check_input_basic() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_basic.txt"),
-        Type::BoolT
-    );
+    assert_eq!(tlc::type_check("tests/inputs/input_basic.txt"), Type::BoolT);
 }
 
 #[test]
@@ -115,10 +112,7 @@ fn type_check_input_advanced() {
 
 #[test]
 fn type_check_input_super() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_super.txt"),
-        Type::BoolT
-    );
+    assert_eq!(tlc::type_check("tests/inputs/input_super.txt"), Type::BoolT);
 }
 
 #[test]
