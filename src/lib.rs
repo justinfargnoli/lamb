@@ -1,4 +1,5 @@
-mod parse;
+pub mod codegen;
+pub mod parse;
 mod read;
 mod tokenize;
 pub mod type_check;
@@ -13,4 +14,11 @@ pub fn type_check(input_file: &str) -> Type {
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
     type_check::tc(ast, &mut HashMap::new())
+}
+
+pub fn compile(input_file: &str) {
+    let characters = read::build(input_file).unwrap();
+    let mut tokenizer = TokenStream::build(characters);
+    let ast = AST::build(&mut tokenizer);
+    codegen::codegen(&ast);
 }
