@@ -9,30 +9,42 @@ pub enum AST {
     TrueC,
     FalseC,
     EqC(Box<AST>, Box<AST>),
-    IfC {
-        cnd: Box<AST>,
-        then: Box<AST>,
-        els: Box<AST>,
-    },
+    IfC(IfCStruct),
     IdC(String),
-    AppC {
-        func: Box<AST>,
-        arg: Box<AST>,
-    },
-    FdC {
-        arg_name: String,
-        arg_type: Type,
-        ret_type: Type,
-        body: Box<AST>,
-    },
-    RecC {
-        func_name: String,
-        arg_name: String,
-        arg_type: Type,
-        ret_type: Type,
-        body: Box<AST>,
-        func_use: Box<AST>,
-    },
+    AppC(AppCStruct),
+    FdC(FdCStruct),
+    RecC(RecCStruct),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct IfCStruct {
+    pub cnd: Box<AST>,
+    pub then: Box<AST>,
+    pub els: Box<AST>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AppCStruct {
+    pub func: Box<AST>,
+    pub arg: Box<AST>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FdCStruct {
+    pub arg_name: String,
+    pub arg_type: Type,
+    pub ret_type: Type,
+    pub body: Box<AST>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct RecCStruct {
+    pub func_name: String,
+    pub arg_name: String,
+    pub arg_type: Type,
+    pub ret_type: Type,
+    pub body: Box<AST>,
+    pub func_use: Box<AST>,
 }
 
 impl AST {
@@ -75,11 +87,11 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast3 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::IfC {
+                        AST::IfC(IfCStruct {
                             cnd: Box::new(ast1),
                             then: Box::new(ast2),
                             els: Box::new(ast3),
-                        }
+                        })
                     }
                     Token::IdC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -101,10 +113,10 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::AppC {
+                        AST::AppC(AppCStruct {
                             func: Box::new(ast1),
                             arg: Box::new(ast2),
-                        }
+                        })
                     }
                     Token::FdC => {
                         //THE ARGUMENT NAME
@@ -133,12 +145,12 @@ impl AST {
 
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-                        AST::FdC {
+                        AST::FdC(FdCStruct {
                             arg_name: string_ast,
                             arg_type,
                             ret_type,
                             body: Box::new(ast_body),
-                        }
+                        })
                     }
                     Token::EqC => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
@@ -186,14 +198,14 @@ impl AST {
                         // 6th parameter
                         let rec_func_use_ast = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::RecC {
+                        AST::RecC(RecCStruct {
                             func_name: rec_func_name,
                             arg_name: rec_arg_name,
                             arg_type: rec_arg_type,
                             ret_type: rec_ret_type,
                             body: Box::new(rec_body_ast),
                             func_use: Box::new(rec_func_use_ast),
-                        }
+                        })
                     }
                     _ => panic!("Parsing error"), ////TODO: THIS should never happen
                 }

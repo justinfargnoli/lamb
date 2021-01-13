@@ -40,12 +40,12 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Types differ in MultC!")
             }
         }
-        AST::IfC { cnd, then, els } => {
-            if tc_helper(&cnd, tenv) != Type::BoolT {
+        AST::IfC(ifCStruct) => {
+            if tc_helper(&ifCStruct.cnd, tenv) != Type::BoolT {
                 panic!("Condition in an if statement is not boolean!")
             }
-            let then_type = tc_helper(&then, tenv);
-            let else_type = tc_helper(&els, tenv);
+            let then_type = tc_helper(&ifCStruct.then, tenv);
+            let else_type = tc_helper(&ifCStruct.els, tenv);
             if then_type == else_type {
                 then_type
             } else {
@@ -59,9 +59,9 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Variable not saved in type environment")
             }
         }
-        AST::AppC { func, arg } => {
-            let fun_type = tc_helper(&func, tenv);
-            let arg_type = tc_helper(&arg, tenv);
+        AST::AppC(appCStruct) => {
+            let fun_type = tc_helper(&appCStruct.func, tenv);
+            let arg_type = tc_helper(&appCStruct.arg, tenv);
             match fun_type {
                 Type::FunT {
                     arg: funT_arg,
@@ -76,49 +76,37 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
                 _ => panic!("Not a function in appC"),
             }
         }
-        AST::RecC {
-            func_name,
-            arg_name,
-            arg_type,
-            ret_type,
-            body,
-            func_use,
-        } => {
+        AST::RecC(recCStruct) => {
             tenv.insert(
-                func_name.clone(),
+                recCStruct.func_name.clone(),
                 Type::FunT {
-                    arg: Box::new(arg_type.clone()),
-                    ret: Box::new(ret_type.clone()),
+                    arg: Box::new(recCStruct.arg_type.clone()),
+                    ret: Box::new(recCStruct.ret_type.clone()),
                 },
             );
-            tenv.insert(arg_name.clone(), arg_type.clone());
-            if *ret_type == tc_helper(&body, tenv) {
-                tc_helper(&func_use, tenv);
-                tenv.remove(func_name);
-                tenv.remove(arg_name);
-                ret_type.clone()
+            tenv.insert(recCStruct.arg_name.clone(), recCStruct.arg_type.clone());
+            if recCStruct.ret_type == tc_helper(&recCStruct.body, tenv) {
+                tc_helper(&recCStruct.func_use, tenv);
+                tenv.remove(&recCStruct.func_name);
+                tenv.remove(&recCStruct.arg_name);
+                recCStruct.ret_type.clone()
             } else {
                 panic!("Return type of recursive function does not match return type of the body!");
             }
         }
-        AST::FdC {
-            arg_name,
-            arg_type,
-            ret_type,
-            body,
-        } => {
+        AST::FdC(fdCStruct) => {
             // let ext_tenv = tenv/*.clone()*/;
-            tenv.insert(arg_name.clone(), arg_type.clone());
-            let body_ret = tc_helper(&body, tenv);
-            if body_ret == *ret_type {
+            tenv.insert(fdCStruct.arg_name.clone(), fdCStruct.arg_type.clone());
+            let body_ret = tc_helper(&fdCStruct.body, tenv);
+            if body_ret == fdCStruct.ret_type {
                 /*
                  * Since the body has type checked we can remove the varaible name form the scope to preseve a common understanding of scope.
                  * This allows us ot avoid cloning the HashMap
                  */
-                tenv.remove(arg_name);
+                tenv.remove(&fdCStruct.arg_name);
                 Type::FunT {
-                    arg: Box::new(arg_type.clone()),
-                    ret: Box::new(ret_type.clone()),
+                    arg: Box::new(fdCStruct.arg_type.clone()),
+                    ret: Box::new(fdCStruct.ret_type.clone()),
                 }
             } else {
                 panic!("Body type doesn't match declared type")
