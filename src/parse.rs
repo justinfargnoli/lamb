@@ -360,11 +360,11 @@ mod tests {
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::IfC {
+            AST::IfC(IfCStruct {
                 cnd: Box::new(AST::TrueC),
                 then: Box::new(AST::TrueC),
                 els: Box::new(AST::FalseC)
-            }
+            })
         );
     }
     #[test]
