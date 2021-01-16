@@ -1,13 +1,23 @@
 #![allow(non_snake_case)]
 
 use crate::parse::AST;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt, fmt::Display};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Type {
     NumT,
     BoolT,
     FunT { arg: Box<Type>, ret: Box<Type> },
+}
+
+impl Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Type::NumT => write!(f, "NumT"),
+            Type::BoolT => write!(f, "BoolT"),
+            Type::FunT { arg, ret } => write!(f, "FunT({}, {})", arg, ret),
+        }
+    }
 }
 
 pub fn tc(ast: &AST) -> Type {
