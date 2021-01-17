@@ -4,12 +4,13 @@ pub mod read;
 pub mod tokenize;
 pub mod type_check;
 
+use inkwell::support::LLVMString;
 use parse::AST;
-use std::{collections::VecDeque, io::Result};
+use std::{collections::VecDeque, io};
 use tokenize::TokenStream;
 use type_check::Type;
 
-pub fn read(input_file: &str) -> Result<VecDeque<char>> {
+pub fn read(input_file: &str) -> io::Result<VecDeque<char>> {
     read::build(input_file)
 }
 
@@ -25,19 +26,20 @@ pub fn parse(input_file: &str) -> AST {
 
 pub fn type_check(input_file: &str) -> Type {
     let ast = parse(input_file);
-    type_check::tc(&ast)
+    type_check::run(&ast)
 }
 
 pub fn check(input_file: &str) -> Type {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::tc(&ast)
+    type_check::run(&ast)
 }
 
-pub fn compile(input_file: &str) {
+pub fn compile(input_file: &str) -> Result<(), LLVMString> {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::tc(&ast);
+    type_check::run(&ast);
+    codegen::run(&ast)
 }

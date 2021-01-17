@@ -49,7 +49,9 @@ fn main() {
             let file = arg_matches
                 .value_of("file")
                 .expect("Argument <file> not found.");
-            tlc::compile(file);
+            if let Err(llvm_string) = tlc::compile(file) {
+                println!("{}", llvm_string);
+            }
         }
         ("interpret", Some(_)) => unimplemented!(),
         _ => panic!("Unable to parse command line arguments."),
