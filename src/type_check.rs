@@ -20,7 +20,7 @@ impl Display for Type {
     }
 }
 
-pub fn tc(ast: &AST) -> Type {
+pub fn run(ast: &AST) -> Type {
     tc_helper(ast, &mut HashMap::new())
 }
 
@@ -105,7 +105,6 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
             }
         }
         AST::FdC(fdCStruct) => {
-            // let ext_tenv = tenv/*.clone()*/;
             tenv.insert(fdCStruct.arg_name.clone(), fdCStruct.arg_type.clone());
             let body_ret = tc_helper(&fdCStruct.body, tenv);
             if body_ret == fdCStruct.ret_type {
@@ -132,13 +131,13 @@ mod tests {
     #[test]
     fn tc_eq_c() {
         let input = Box::new(AST::EqC(Box::new(AST::NumC(0)), Box::new(AST::NumC(-5))));
-        assert_eq!(tc(&input), Type::BoolT);
+        assert_eq!(run(&input), Type::BoolT);
     }
 
     #[test]
     #[should_panic]
     fn tc_eq_c_fail() {
         let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC(-984))));
-        tc(&input);
+        run(&input);
     }
 }
