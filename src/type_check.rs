@@ -43,12 +43,19 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
                 panic!("Types differ in MultC!")
             }
         }
-        AST::EqC(operand1, operand2) => {
-            if tc_helper(&operand1, tenv) == tc_helper(&operand2, tenv) {
-                Type::BoolT
-            } else {
-                panic!("Types differ in MultC!")
+        AST::EqC(op1, op2) => {
+            let op1_type = tc_helper(&op1, tenv);
+            let op2_type = tc_helper(&op2, tenv);
+
+            if let Type::FunT { .. } = op1_type {
+                panic!("EqC cannot comapre type FunT")
+            } else if let Type::FunT { .. } = op2_type {
+                panic!("EqC cannot comapre type FunT")
+            } else if op1_type != op2_type {
+                panic!("Types differ in EqC!")
             }
+
+            Type::BoolT
         }
         AST::IfC(ifCStruct) => {
             if tc_helper(&ifCStruct.cnd, tenv) != Type::BoolT {
@@ -109,8 +116,8 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
             let body_ret = tc_helper(&fdCStruct.body, tenv);
             if body_ret == fdCStruct.ret_type {
                 /*
-                 * Since the body has type checked we can remove the varaible name form the scope to preseve a common understanding of scope.
-                 * This allows us ot avoid cloning the HashMap
+                 * Since the body has type checked we can remove the varaible name form the scope to
+                 * preseve a common understanding of scope. This allows us ot avoid cloning the HashMap.
                  */
                 tenv.remove(&fdCStruct.arg_name);
                 Type::FunT {
@@ -127,6 +134,7 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parse::FdCStruct;
 
     #[test]
     fn tc_eq_c() {
@@ -136,8 +144,28 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn tc_eq_c_fail() {
+    fn tc_eq_c_fail_incompatible_type() {
         let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC(-984))));
+        run(&input);
+    }
+
+    #[test]
+    #[should_panic]
+    fn tc_eq_c_fail_comparing_functions() {
+        let input = Box::new(AST::EqC(
+            Box::new(AST::FdC(FdCStruct {
+                arg_name: String::from("a"),
+                arg_type: Type::NumT,
+                ret_type: Type::NumT,
+                body: Box::new(AST::IdC(String::from("a"))),
+            })),
+            Box::new(AST::FdC(FdCStruct {
+                arg_name: String::from("a"),
+                arg_type: Type::NumT,
+                ret_type: Type::NumT,
+                body: Box::new(AST::IdC(String::from("a"))),
+            })),
+        ));
         run(&input);
     }
 }
