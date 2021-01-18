@@ -172,6 +172,9 @@ impl AST {
                             }
                             _ => panic!("String not found!"),
                         }
+                        if rec_func_name == "main" {
+                            panic!("'main' is a reserved function name");
+                        }
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         // 2nd parameter
@@ -243,8 +246,7 @@ mod tests {
     use std::collections::VecDeque;
 
     #[test]
-    fn parse_1() {
-        //testing numC(1)
+    fn num_c_1() {
         let tokens = VecDeque::from(vec![
             Token::NumC,
             Token::ParenLeft,
@@ -256,8 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_2() {
-        //testing plusC(numC(1), numC(2))
+    fn plus_c_1_2() {
         let tokens = VecDeque::from(vec![
             Token::PlusC,
             Token::ParenLeft,
@@ -281,8 +282,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn parse_3() {
-        //testing plusC(1, numC(2)), this should panic
+    fn plus_c_1_num_c_2() {
         let tokens = VecDeque::from(vec![
             Token::PlusC,
             Token::ParenLeft,
@@ -299,8 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_4() {
-        //testing multC(numC(1), numC(2))
+    fn mult_c_1_2() {
         let tokens = VecDeque::from(vec![
             Token::MultC,
             Token::ParenLeft,
@@ -324,7 +323,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn parse_plus_c() {
+    fn plus_c() {
         //testing plusC(numC(1), numC(2) -> this should panic (missing right parenthesis)
         let tokens = VecDeque::from(vec![
             Token::PlusC,
@@ -345,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_if_c_1() {
+    fn if_c_1() {
         //testing if(true, true, false)
         let tokens = VecDeque::from(vec![
             Token::IfC,
@@ -369,7 +368,7 @@ mod tests {
     }
     #[test]
     #[should_panic]
-    fn parse_if_c_2() {
+    fn if_c_2() {
         //testing if(true, true false)
         let tokens = VecDeque::from(vec![
             Token::IfC,
@@ -384,8 +383,7 @@ mod tests {
         AST::build(&mut token_stream);
     }
     #[test]
-    fn parse_8() {
-        //testing id("x")
+    fn id_c() {
         let tokens = VecDeque::from(vec![
             Token::IdC,
             Token::ParenLeft,
@@ -399,7 +397,7 @@ mod tests {
     }
     #[test]
     #[should_panic]
-    fn parse_9() {
+    fn id_c_missing_quote() {
         //testing id("x)
         let tokens = VecDeque::from(vec![
             Token::IdC,
@@ -414,7 +412,7 @@ mod tests {
     //Tests fir appC and fdC omitted here, done externally.
 
     #[test]
-    fn parse_eq_c() {
+    fn eq_c() {
         let tokens = VecDeque::from(vec![
             Token::EqC,
             Token::ParenLeft,
@@ -435,7 +433,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn parse_eq_c_fail() {
+    fn eq_c_fail() {
         let tokens = VecDeque::from(vec![
             Token::EqC,
             Token::ParenLeft,

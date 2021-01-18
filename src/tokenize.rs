@@ -196,7 +196,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tokenize_num_c() {
+    fn num_c() {
         let characters = VecDeque::from(vec!['n', 'u', 'm', 'C', '(', '2', ')']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_num_c_negative() {
+    fn num_c_negative() {
         let characters = VecDeque::from(vec!['n', 'u', 'm', 'C', '(', '-', '2', ')']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_id_c() {
+    fn id_c() {
         let characters = VecDeque::from(vec!['i', 'd', 'C', '(', '\"', 'a', 'b', '\"', ')']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_mult_c() {
+    fn mult_c() {
         let characters = VecDeque::from(vec![
             'm', 'u', 'l', 't', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_plus_c() {
+    fn plus_c() {
         let characters = VecDeque::from(vec![
             'p', 'l', 'u', 's', 'C', '(', 'n', 'u', 'm', 'C', '(', '2', ')', ',', 'n', 'u', 'm',
             'C', '(', '2', ')', ')',
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_true_c() {
+    fn true_c() {
         let characters = VecDeque::from(vec!['t', 'r', 'u', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_false_c() {
+    fn false_c() {
         let characters = VecDeque::from(vec!['f', 'a', 'l', 's', 'e', 'C']);
         let mut token_stream = TokenStream::build(characters);
 
@@ -291,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_eq_c() {
+    fn eq_c() {
         let characters = String::from("eqC(numC(1), numC(3))").chars().collect();
         let mut token_stream = TokenStream::build(characters);
 
@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_if_c() {
+    fn if_c() {
         let characters = String::from("ifC(falseC, numC(1), numC(3))")
             .chars()
             .collect();
@@ -333,7 +333,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_fd_c() {
+    fn fd_c() {
         let characters = String::from("fdC(\"x\", boolT, boolT, idC(\"x\"))")
             .chars()
             .collect();
@@ -359,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    fn tokenize_app_c() {
+    fn app_c() {
         let characters = String::from("appC(fdC(\"x\", boolT, boolT, idC(\"x\")), falseC)")
             .chars()
             .collect();
