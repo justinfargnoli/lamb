@@ -103,10 +103,10 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
             );
             tenv.insert(recCStruct.arg_name.clone(), recCStruct.arg_type.clone());
             if recCStruct.ret_type == tc_helper(&recCStruct.body, tenv) {
-                tc_helper(&recCStruct.func_use, tenv);
+                let ret_type = tc_helper(&recCStruct.func_use, tenv);
                 tenv.remove(&recCStruct.func_name);
                 tenv.remove(&recCStruct.arg_name);
-                recCStruct.ret_type.clone()
+                ret_type
             } else {
                 panic!("Return type of recursive function does not match return type of the body!");
             }
@@ -134,24 +134,24 @@ fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::FdCStruct;
+    use crate::parse::{AppCStruct, FdCStruct, RecCStruct};
 
     #[test]
-    fn tc_eq_c() {
+    fn eq_c() {
         let input = Box::new(AST::EqC(Box::new(AST::NumC(0)), Box::new(AST::NumC(-5))));
         assert_eq!(run(&input), Type::BoolT);
     }
 
     #[test]
     #[should_panic]
-    fn tc_eq_c_fail_incompatible_type() {
+    fn eq_c_fail_incompatible_type() {
         let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC(-984))));
         run(&input);
     }
 
     #[test]
     #[should_panic]
-    fn tc_eq_c_fail_comparing_functions() {
+    fn eq_c_fail_comparing_functions() {
         let input = Box::new(AST::EqC(
             Box::new(AST::FdC(FdCStruct {
                 arg_name: String::from("a"),
@@ -167,5 +167,24 @@ mod tests {
             })),
         ));
         run(&input);
+    }
+
+    #[test]
+    fn ec_c_ret_type() {
+        let input = Box::new(AST::RecC(RecCStruct {
+            func_name: String::from("func"),
+            arg_name: String::from("arg"),
+            arg_type: Type::NumT,
+            ret_type: Type::NumT,
+            body: Box::new(AST::IdC(String::from("arg"))),
+            func_use: Box::new(AST::EqC(
+                Box::new(AST::NumC(1)),
+                Box::new(AST::AppC(AppCStruct {
+                    func: Box::new(AST::IdC(String::from("func"))),
+                    arg: Box::new(AST::NumC(1)),
+                })),
+            )),
+        }));
+        assert_eq!(run(&input), Type::BoolT);
     }
 }
