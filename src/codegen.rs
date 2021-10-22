@@ -1,7 +1,8 @@
 use crate::{
-    parse::{AppCStruct, FdCStruct, RecCStruct, AST},
+    parse::{FunctionApplication, FunctionDefinition, RecursiveFunction, AST},
     type_check::Type,
 };
+
 use inkwell::{
     builder::Builder,
     context::Context,
@@ -52,36 +53,36 @@ impl<'ctx> CodeGen<'ctx> {
         self.context.append_basic_block(main, "entry");
 
         match ast {
-            AST::NumC(num) => {
+            AST::NumberLiteral(num) => {
                 if *num < 0 {
                     panic!("Cannot codegen negative number: {}, num", num);
                 }
                 self.builder
                     .build_return(Some(&self.context.i64_type().const_int(*num as u64, false)));
             }
-            AST::PlusC(op1, op2) => {
+            AST::Plus(op1, op2) => {
                 let op1_llvm = self.number(op1);
                 let op2_llvm = self.number(op2);
                 self.builder.build_return(Some(
                     &self.builder.build_int_add(op1_llvm, op2_llvm, "tmpadd"),
                 ));
             }
-            AST::MultC(op1, op2) => {
+            AST::Multiply(op1, op2) => {
                 let op1_llvm = self.number(op1);
                 let op2_llvm = self.number(op2);
                 self.builder.build_return(Some(
                     &self.builder.build_int_mul(op1_llvm, op2_llvm, "tmpmul"),
                 ));
             }
-            AST::TrueC => {
+            AST::TrueLiteral => {
                 self.builder
                     .build_return(Some(&self.context.bool_type().const_int(1, false)));
             }
-            AST::FalseC => {
+            AST::FalseLiteral => {
                 self.builder
                     .build_return(Some(&self.context.bool_type().const_int(0, false)));
             }
-            AST::EqC(_op1, _op2) => {
+            AST::Equals(_op1, _op2) => {
                 // todo: add ability to test boolean expressions for equality
 
                 // let op1_llvm = self.number(op1);
@@ -96,17 +97,17 @@ impl<'ctx> CodeGen<'ctx> {
 
                 unimplemented!()
             }
-            AST::IfC(_if_struct) => {
+            AST::If(_if_struct) => {
                 unimplemented!()
             }
-            AST::IdC(_) => unreachable!(),
-            AST::FdC(def_fn) => {
+            AST::Identifier(_) => unreachable!(),
+            AST::FunctionDefinition(def_fn) => {
                 self.function_definition(def_fn);
             }
-            AST::AppC(app_fn) => {
+            AST::FunctionApplication(app_fn) => {
                 self.function_application(app_fn);
             }
-            AST::RecC(rec_fn) => {
+            AST::RecursiveFunction(rec_fn) => {
                 self.recursive_function(rec_fn);
             }
         }
@@ -128,9 +129,9 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn type_to_llvm_basic_type(&self, t: &Type) -> Box<dyn BasicType<'ctx> + 'ctx> {
         match t {
-            Type::NumT => Box::new(self.context.i64_type()),
-            Type::BoolT => Box::new(self.context.bool_type()),
-            Type::FunT { arg, ret } => Box::new(
+            Type::Number => Box::new(self.context.i64_type()),
+            Type::Boolean => Box::new(self.context.bool_type()),
+            Type::Function { argument: arg, ret } => Box::new(
                 self.function_prototype(arg, ret)
                     .ptr_type(AddressSpace::Generic),
             ),
@@ -144,25 +145,25 @@ impl<'ctx> CodeGen<'ctx> {
         )
     }
 
-    pub fn function_definition(&mut self, def_fn: &FdCStruct) -> FunctionValue<'ctx> {
+    pub fn function_definition(&mut self, def_fn: &FunctionDefinition) -> FunctionValue<'ctx> {
         let function_value = self.module.add_function(
             "",
-            self.function_prototype(&def_fn.ret_type, &def_fn.arg_type),
+            self.function_prototype(&def_fn.return_type, &def_fn.argument_type),
             None,
         );
 
         self.context.append_basic_block(function_value, "entry");
 
-        match def_fn.ret_type {
-            Type::NumT => {
+        match def_fn.return_type {
+            Type::Number => {
                 let return_value = self.number(&def_fn.body);
                 self.builder.build_return(Some(&return_value));
             }
-            Type::BoolT => {
+            Type::Boolean => {
                 let return_value = self.boolean(&def_fn.body);
                 self.builder.build_return(Some(&return_value));
             }
-            Type::FunT { .. } => {
+            Type::Function { .. } => {
                 let return_value = self
                     .function(&def_fn.body)
                     .as_global_value()
@@ -171,10 +172,10 @@ impl<'ctx> CodeGen<'ctx> {
             }
         }
 
-        return function_value;
+        function_value
     }
 
-    pub fn function_application(&mut self, _app_fn: &AppCStruct) -> CallSiteValue<'ctx> {
+    pub fn function_application(&mut self, _app_fn: &FunctionApplication) -> CallSiteValue<'ctx> {
         // let function_value = self.function(&*app_fn.func);
         // let argument = self.number(&*app_fn.arg);
         // self.builder.build_call(
@@ -185,25 +186,25 @@ impl<'ctx> CodeGen<'ctx> {
         unimplemented!()
     }
 
-    pub fn recursive_function<'a>(&mut self, rec_fn: &RecCStruct) {
+    pub fn recursive_function(&mut self, rec_fn: &RecursiveFunction) {
         let function_value = self.module.add_function(
-            &rec_fn.func_name,
-            self.function_prototype(&rec_fn.ret_type, &rec_fn.arg_type),
+            &rec_fn.function_name,
+            self.function_prototype(&rec_fn.return_type, &rec_fn.argument_type),
             None,
         );
 
         self.context.append_basic_block(function_value, "entry");
 
-        match rec_fn.ret_type {
-            Type::NumT => {
+        match rec_fn.return_type {
+            Type::Number => {
                 let return_value = self.number(&rec_fn.body);
                 self.builder.build_return(Some(&return_value));
             }
-            Type::BoolT => {
+            Type::Boolean => {
                 let return_value = self.boolean(&rec_fn.body);
                 self.builder.build_return(Some(&return_value));
             }
-            Type::FunT { .. } => {
+            Type::Function { .. } => {
                 let return_value = self
                     .function(&rec_fn.body)
                     .as_global_value()

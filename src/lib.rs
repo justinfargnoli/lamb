@@ -26,20 +26,20 @@ pub fn parse(input_file: &str) -> AST {
 
 pub fn type_check(input_file: &str) -> Type {
     let ast = parse(input_file);
-    type_check::run(&ast)
+    type_check::type_of(&ast)
 }
 
 pub fn check(input_file: &str) -> Type {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::run(&ast)
+    type_check::type_of(&ast)
 }
 
 pub fn compile(input_file: &str) -> Result<(), LLVMString> {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::run(&ast);
+    type_check::type_of(&ast);
     codegen::run(&ast)
 }

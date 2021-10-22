@@ -2,21 +2,21 @@ use tlc::type_check::Type;
 
 #[test]
 fn type_check_input_1() {
-    assert_eq!(tlc::type_check("tests/inputs/input1.txt"), Type::NumT);
+    assert_eq!(tlc::type_check("tests/inputs/input1.txt"), Type::Number);
 }
 
 #[test]
 fn type_check_input_2() {
-    assert_eq!(tlc::type_check("tests/inputs/input2.txt"), Type::NumT);
+    assert_eq!(tlc::type_check("tests/inputs/input2.txt"), Type::Number);
 }
 
 #[test]
 fn type_check_input_3() {
     assert_eq!(
         tlc::type_check("tests/inputs/input3.txt"),
-        Type::FunT {
-            arg: Box::new(Type::NumT),
-            ret: Box::new(Type::NumT)
+        Type::Function {
+            argument: Box::new(Type::Number),
+            ret: Box::new(Type::Number)
         }
     );
 }
@@ -25,9 +25,9 @@ fn type_check_input_3() {
 fn type_check_input_4() {
     assert_eq!(
         tlc::type_check("tests/inputs/input4.txt"),
-        Type::FunT {
-            arg: Box::new(Type::NumT),
-            ret: Box::new(Type::NumT)
+        Type::Function {
+            argument: Box::new(Type::Number),
+            ret: Box::new(Type::Number)
         }
     );
 }
@@ -40,7 +40,7 @@ fn type_check_input_5() {
 
 #[test]
 fn type_check_input_6() {
-    assert_eq!(tlc::type_check("tests/inputs/input6.txt"), Type::NumT);
+    assert_eq!(tlc::type_check("tests/inputs/input6.txt"), Type::Number);
 }
 
 #[test]
@@ -51,17 +51,17 @@ fn type_check_input_7() {
 
 #[test]
 fn type_check_input_8() {
-    assert_eq!(tlc::type_check("tests/inputs/input8.txt"), Type::BoolT);
+    assert_eq!(tlc::type_check("tests/inputs/input8.txt"), Type::Boolean);
 }
 
 #[test]
 fn type_check_input_9() {
-    assert_eq!(tlc::type_check("tests/inputs/input9.txt"), Type::BoolT);
+    assert_eq!(tlc::type_check("tests/inputs/input9.txt"), Type::Boolean);
 }
 
 #[test]
 fn type_check_input_10() {
-    assert_eq!(tlc::type_check("tests/inputs/input10.txt"), Type::NumT);
+    assert_eq!(tlc::type_check("tests/inputs/input10.txt"), Type::Number);
 }
 
 #[test]
@@ -78,26 +78,29 @@ fn type_check_input_12() {
 
 #[test]
 fn type_check_input_14() {
-    assert_eq!(tlc::type_check("tests/inputs/input14.txt"), Type::BoolT);
+    assert_eq!(tlc::type_check("tests/inputs/input14.txt"), Type::Boolean);
 }
 
 #[test]
 fn type_check_input_15() {
-    assert_eq!(tlc::type_check("tests/inputs/input15.txt"), Type::BoolT);
+    assert_eq!(tlc::type_check("tests/inputs/input15.txt"), Type::Boolean);
 }
 
 #[test]
 fn type_check_input_basic() {
-    assert_eq!(tlc::type_check("tests/inputs/input_basic.txt"), Type::BoolT);
+    assert_eq!(
+        tlc::type_check("tests/inputs/input_basic.txt"),
+        Type::Boolean
+    );
 }
 
 #[test]
 fn type_check_input_medium() {
     assert_eq!(
         tlc::type_check("tests/inputs/input_medium.txt"),
-        Type::FunT {
-            arg: Box::new(Type::NumT),
-            ret: Box::new(Type::NumT)
+        Type::Function {
+            argument: Box::new(Type::Number),
+            ret: Box::new(Type::Number)
         }
     );
 }
@@ -106,20 +109,23 @@ fn type_check_input_medium() {
 fn type_check_input_advanced() {
     assert_eq!(
         tlc::type_check("tests/inputs/input_advanced.txt"),
-        Type::NumT
+        Type::Number
     );
 }
 
 #[test]
 fn type_check_input_super() {
-    assert_eq!(tlc::type_check("tests/inputs/input_super.txt"), Type::BoolT);
+    assert_eq!(
+        tlc::type_check("tests/inputs/input_super.txt"),
+        Type::Boolean
+    );
 }
 
 #[test]
 fn type_check_input_rec_c_sumation() {
     assert_eq!(
         tlc::type_check("tests/inputs/input_rec_c_sumation.txt"),
-        Type::NumT
+        Type::Number
     );
 }
 
@@ -133,6 +139,6 @@ fn type_check_input_rec_c_fail() {
 fn type_check_input_rec_c_factorial() {
     assert_eq!(
         tlc::type_check("tests/inputs/input_rec_c_factorial.txt"),
-        Type::NumT
+        Type::Number
     );
 }

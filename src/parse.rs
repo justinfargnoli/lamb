@@ -3,48 +3,48 @@ use crate::tokenize::{Token, TokenStream};
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
-    NumC(i64),
-    PlusC(Box<AST>, Box<AST>),
-    MultC(Box<AST>, Box<AST>),
-    TrueC,
-    FalseC,
-    EqC(Box<AST>, Box<AST>),
-    IfC(IfCStruct),
-    IdC(String),
-    AppC(AppCStruct),
-    FdC(FdCStruct),
-    RecC(RecCStruct),
+    NumberLiteral(i64),
+    Plus(Box<AST>, Box<AST>),
+    Multiply(Box<AST>, Box<AST>),
+    TrueLiteral,
+    FalseLiteral,
+    Equals(Box<AST>, Box<AST>),
+    If(If),
+    Identifier(String),
+    FunctionApplication(FunctionApplication),
+    FunctionDefinition(FunctionDefinition),
+    RecursiveFunction(RecursiveFunction),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct IfCStruct {
-    pub cnd: Box<AST>,
+pub struct If {
+    pub condition: Box<AST>,
     pub then: Box<AST>,
     pub els: Box<AST>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct AppCStruct {
-    pub func: Box<AST>,
-    pub arg: Box<AST>,
+pub struct FunctionApplication {
+    pub function: Box<AST>,
+    pub argument: Box<AST>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct FdCStruct {
-    pub arg_name: String,
-    pub arg_type: Type,
-    pub ret_type: Type,
+pub struct FunctionDefinition {
+    pub argument_name: String,
+    pub argument_type: Type,
+    pub return_type: Type,
     pub body: Box<AST>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct RecCStruct {
-    pub func_name: String,
-    pub arg_name: String,
-    pub arg_type: Type,
-    pub ret_type: Type,
+pub struct RecursiveFunction {
+    pub function_name: String,
+    pub argument_name: String,
+    pub argument_type: Type,
+    pub return_type: Type,
     pub body: Box<AST>,
-    pub func_use: Box<AST>,
+    pub function_use: Box<AST>,
 }
 
 impl AST {
@@ -52,34 +52,34 @@ impl AST {
         match token_stream.next() {
             Some(token) => {
                 match token {
-                    Token::TrueC => AST::TrueC,
-                    Token::FalseC => AST::FalseC,
-                    Token::NumC => {
+                    Token::TrueLiteral => AST::TrueLiteral,
+                    Token::FalseLiteral => AST::FalseLiteral,
+                    Token::NumLiteral => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
-                        if let Token::Number(number) = token_stream.next().unwrap() {
+                        if let Token::NumberLiteral(number) = token_stream.next().unwrap() {
                             assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                            AST::NumC(number)
+                            AST::NumberLiteral(number)
                         } else {
                             panic!("Number not found in NumC")
                         }
                     }
-                    Token::PlusC => {
+                    Token::Plus => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::PlusC(Box::new(ast1), Box::new(ast2))
+                        AST::Plus(Box::new(ast1), Box::new(ast2))
                     }
-                    Token::MultC => {
+                    Token::Multiply => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::MultC(Box::new(ast1), Box::new(ast2))
+                        AST::Multiply(Box::new(ast1), Box::new(ast2))
                     }
-                    Token::IfC => {
+                    Token::If => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
@@ -87,19 +87,19 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast3 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::IfC(IfCStruct {
-                            cnd: Box::new(ast1),
+                        AST::If(If {
+                            condition: Box::new(ast1),
                             then: Box::new(ast2),
                             els: Box::new(ast3),
                         })
                     }
-                    Token::IdC => {
+                    Token::Identifier => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
                         match token_stream.next().unwrap() {
-                            Token::ID(id) => {
-                                string_ast = AST::IdC(id);
+                            Token::QuotedString(id) => {
+                                string_ast = AST::Identifier(id);
                             }
                             _ => panic!("String not found!"),
                         }
@@ -107,24 +107,24 @@ impl AST {
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
                         string_ast
                     }
-                    Token::AppC => {
+                    Token::FunctionApplication => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::AppC(AppCStruct {
-                            func: Box::new(ast1),
-                            arg: Box::new(ast2),
+                        AST::FunctionApplication(FunctionApplication {
+                            function: Box::new(ast1),
+                            argument: Box::new(ast2),
                         })
                     }
-                    Token::FdC => {
+                    Token::FunctionDefinition => {
                         //THE ARGUMENT NAME
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {
+                            Token::QuotedString(val) => {
                                 string_ast = val;
                             }
                             _ => panic!("String not found!"),
@@ -145,28 +145,28 @@ impl AST {
 
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
 
-                        AST::FdC(FdCStruct {
-                            arg_name: string_ast,
-                            arg_type,
-                            ret_type,
+                        AST::FunctionDefinition(FunctionDefinition {
+                            argument_name: string_ast,
+                            argument_type: arg_type,
+                            return_type: ret_type,
                             body: Box::new(ast_body),
                         })
                     }
-                    Token::EqC => {
+                    Token::Equals => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::EqC(Box::new(ast1), Box::new(ast2))
+                        AST::Equals(Box::new(ast1), Box::new(ast2))
                     }
-                    Token::RecC => {
+                    Token::RecursiveFunction => {
                         assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                         // 1st parameter
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let rec_func_name;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {
+                            Token::QuotedString(val) => {
                                 //Token::ID, not to be confused with idC
                                 rec_func_name = val;
                             }
@@ -181,7 +181,7 @@ impl AST {
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let rec_arg_name;
                         match token_stream.next().unwrap() {
-                            Token::ID(val) => {
+                            Token::QuotedString(val) => {
                                 //Token::ID, not to be confused with idC
                                 rec_arg_name = val;
                             }
@@ -201,13 +201,13 @@ impl AST {
                         // 6th parameter
                         let rec_func_use_ast = AST::build(token_stream);
                         assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                        AST::RecC(RecCStruct {
-                            func_name: rec_func_name,
-                            arg_name: rec_arg_name,
-                            arg_type: rec_arg_type,
-                            ret_type: rec_ret_type,
+                        AST::RecursiveFunction(RecursiveFunction {
+                            function_name: rec_func_name,
+                            argument_name: rec_arg_name,
+                            argument_type: rec_arg_type,
+                            return_type: rec_ret_type,
                             body: Box::new(rec_body_ast),
-                            func_use: Box::new(rec_func_use_ast),
+                            function_use: Box::new(rec_func_use_ast),
                         })
                     }
                     _ => panic!("Parsing error"), ////TODO: THIS should never happen
@@ -220,16 +220,16 @@ impl AST {
     fn parse_type(token_stream: &mut TokenStream) -> Type {
         match token_stream.next() {
             Some(token) => match token {
-                Token::NumT => Type::NumT,
-                Token::BoolT => Type::BoolT,
-                Token::FunT => {
+                Token::NumberType => Type::Number,
+                Token::BooleanType => Type::Boolean,
+                Token::FunctionType => {
                     assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
                     let box1 = AST::parse_type(token_stream);
                     assert_eq!(Token::Comma, token_stream.next().unwrap());
                     let box2 = AST::parse_type(token_stream);
                     assert_eq!(Token::ParenRight, token_stream.next().unwrap());
-                    Type::FunT {
-                        arg: Box::new(box1),
+                    Type::Function {
+                        argument: Box::new(box1),
                         ret: Box::new(box2),
                     }
                 }
@@ -248,35 +248,38 @@ mod tests {
     #[test]
     fn num_c_1() {
         let tokens = VecDeque::from(vec![
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(AST::build(&mut token_stream), AST::NumC(1));
+        assert_eq!(AST::build(&mut token_stream), AST::NumberLiteral(1));
     }
 
     #[test]
     fn plus_c_1_2() {
         let tokens = VecDeque::from(vec![
-            Token::PlusC,
+            Token::Plus,
             Token::ParenLeft,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
             Token::Comma,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::PlusC(Box::new(AST::NumC(1)), Box::new(AST::NumC(2)))
+            AST::Plus(
+                Box::new(AST::NumberLiteral(1)),
+                Box::new(AST::NumberLiteral(2))
+            )
         );
     }
 
@@ -284,13 +287,13 @@ mod tests {
     #[should_panic]
     fn plus_c_1_num_c_2() {
         let tokens = VecDeque::from(vec![
-            Token::PlusC,
+            Token::Plus,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::Comma,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             Token::ParenRight,
         ]);
@@ -301,23 +304,26 @@ mod tests {
     #[test]
     fn mult_c_1_2() {
         let tokens = VecDeque::from(vec![
-            Token::MultC,
+            Token::Multiply,
             Token::ParenLeft,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
             Token::Comma,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::MultC(Box::new(AST::NumC(1)), Box::new(AST::NumC(2)))
+            AST::Multiply(
+                Box::new(AST::NumberLiteral(1)),
+                Box::new(AST::NumberLiteral(2))
+            )
         );
     }
 
@@ -326,16 +332,16 @@ mod tests {
     fn plus_c() {
         //testing plusC(numC(1), numC(2) -> this should panic (missing right parenthesis)
         let tokens = VecDeque::from(vec![
-            Token::PlusC,
+            Token::Plus,
             Token::ParenLeft,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
             Token::Comma,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             // Token::ParenRight,
         ]);
@@ -347,22 +353,22 @@ mod tests {
     fn if_c_1() {
         //testing if(true, true, false)
         let tokens = VecDeque::from(vec![
-            Token::IfC,
+            Token::If,
             Token::ParenLeft,
-            Token::TrueC,
+            Token::TrueLiteral,
             Token::Comma,
-            Token::TrueC,
+            Token::TrueLiteral,
             Token::Comma,
-            Token::FalseC,
+            Token::FalseLiteral,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
             AST::build(&mut token_stream),
-            AST::IfC(IfCStruct {
-                cnd: Box::new(AST::TrueC),
-                then: Box::new(AST::TrueC),
-                els: Box::new(AST::FalseC)
+            AST::If(If {
+                condition: Box::new(AST::TrueLiteral),
+                then: Box::new(AST::TrueLiteral),
+                els: Box::new(AST::FalseLiteral)
             })
         );
     }
@@ -371,12 +377,12 @@ mod tests {
     fn if_c_2() {
         //testing if(true, true false)
         let tokens = VecDeque::from(vec![
-            Token::IfC,
+            Token::If,
             Token::ParenLeft,
-            Token::TrueC,
+            Token::TrueLiteral,
             Token::Comma,
-            Token::TrueC,
-            Token::FalseC,
+            Token::TrueLiteral,
+            Token::FalseLiteral,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
@@ -385,25 +391,28 @@ mod tests {
     #[test]
     fn id_c() {
         let tokens = VecDeque::from(vec![
-            Token::IdC,
+            Token::Identifier,
             Token::ParenLeft,
             Token::Quote,
-            Token::ID("x".to_string()),
+            Token::QuotedString("x".to_string()),
             Token::Quote,
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
-        assert_eq!(AST::build(&mut token_stream), AST::IdC("x".to_string()));
+        assert_eq!(
+            AST::build(&mut token_stream),
+            AST::Identifier("x".to_string())
+        );
     }
     #[test]
     #[should_panic]
     fn id_c_missing_quote() {
         //testing id("x)
         let tokens = VecDeque::from(vec![
-            Token::IdC,
+            Token::Identifier,
             Token::ParenLeft,
             Token::Quote,
-            Token::ID("x".to_string()),
+            Token::QuotedString("x".to_string()),
             Token::ParenRight,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
@@ -414,16 +423,16 @@ mod tests {
     #[test]
     fn eq_c() {
         let tokens = VecDeque::from(vec![
-            Token::EqC,
+            Token::Equals,
             Token::ParenLeft,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
             Token::Comma,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             Token::ParenRight,
         ]);
@@ -435,15 +444,15 @@ mod tests {
     #[should_panic]
     fn eq_c_fail() {
         let tokens = VecDeque::from(vec![
-            Token::EqC,
+            Token::Equals,
             Token::ParenLeft,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(1),
+            Token::NumberLiteral(1),
             Token::ParenRight,
-            Token::NumC,
+            Token::NumLiteral,
             Token::ParenLeft,
-            Token::Number(2),
+            Token::NumberLiteral(2),
             Token::ParenRight,
             Token::ParenRight,
         ]);

@@ -1,190 +1,326 @@
-#![allow(non_snake_case)]
-
 use crate::parse::AST;
 use std::{collections::HashMap, fmt, fmt::Display};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Type {
-    NumT,
-    BoolT,
-    FunT { arg: Box<Type>, ret: Box<Type> },
+    Number,
+    Boolean,
+    Function { argument: Box<Type>, ret: Box<Type> },
 }
 
 impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Type::NumT => write!(f, "NumT"),
-            Type::BoolT => write!(f, "BoolT"),
-            Type::FunT { arg, ret } => write!(f, "FunT({}, {})", arg, ret),
+            Type::Number => write!(f, "NumberType"),
+            Type::Boolean => write!(f, "BooleanType"),
+            Type::Function { argument: arg, ret } => write!(f, "FunctionType({}, {})", arg, ret),
         }
     }
 }
 
-pub fn run(ast: &AST) -> Type {
-    tc_helper(ast, &mut HashMap::new())
+#[derive(Debug, PartialEq)]
+pub enum TypedExpression {
+    NumberLiteral(i64),
+    Plus(TypedAST, TypedAST),
+    Multiply(TypedAST, TypedAST),
+    TrueLiteral,
+    FalseLiteral,
+    Equals(TypedAST, TypedAST),
+    If(TypedIf),
+    Identifier(String),
+    FunctionApplication(TypedFunctionApplication),
+    FunctionDefinition(TypedFunctionDefinition),
+    RecursiveFunction(TypedRecursiveFunction),
 }
 
-fn tc_helper(ast: &AST, tenv: &mut HashMap<String, Type>) -> Type {
-    match ast {
-        AST::TrueC => Type::BoolT,
-        AST::FalseC => Type::BoolT,
-        AST::NumC(_) => Type::NumT,
-        AST::PlusC(op1, op2) => {
-            if tc_helper(&op1, tenv) == Type::NumT && tc_helper(&op2, tenv) == Type::NumT {
-                Type::NumT
-            } else {
-                panic!("Types differ in PlusC!")
-            }
-        }
-        AST::MultC(op1, op2) => {
-            if tc_helper(&op1, tenv) == Type::NumT && tc_helper(&op2, tenv) == Type::NumT {
-                Type::NumT
-            } else {
-                panic!("Types differ in MultC!")
-            }
-        }
-        AST::EqC(op1, op2) => {
-            let op1_type = tc_helper(&op1, tenv);
-            let op2_type = tc_helper(&op2, tenv);
+#[derive(Debug, PartialEq)]
+pub struct TypedIf {
+    pub condition: TypedAST,
+    pub then: TypedAST,
+    pub els: TypedAST,
+}
 
-            if let Type::FunT { .. } = op1_type {
-                panic!("EqC cannot comapre type FunT")
-            } else if let Type::FunT { .. } = op2_type {
-                panic!("EqC cannot comapre type FunT")
-            } else if op1_type != op2_type {
-                panic!("Types differ in EqC!")
-            }
+#[derive(Debug, PartialEq)]
+pub struct TypedFunctionApplication {
+    pub function: TypedAST,
+    pub argument: TypedAST,
+}
 
-            Type::BoolT
-        }
-        AST::IfC(ifCStruct) => {
-            if tc_helper(&ifCStruct.cnd, tenv) != Type::BoolT {
-                panic!("Condition in an if statement is not boolean!")
+#[derive(Debug, PartialEq)]
+pub struct TypedFunctionDefinition {
+    pub argument_name: String,
+    pub argument_type: Type,
+    pub return_type: Type,
+    pub body: TypedAST,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct TypedRecursiveFunction {
+    pub function_name: String,
+    pub argument_name: String,
+    pub argument_type: Type,
+    pub return_type: Type,
+    pub body: TypedAST,
+    pub function_use: TypedAST,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct TypedAST {
+    pub ty: Type,
+    pub ast: Box<TypedExpression>,
+}
+
+impl TypedAST {
+    pub fn new(ast: &AST) -> TypedAST {
+        TypedAST::typer(ast, &mut HashMap::new())
+    }
+
+    fn typer(ast: &AST, tenv: &mut HashMap<String, Type>) -> TypedAST {
+        match ast {
+            AST::TrueLiteral => TypedAST {
+                ty: Type::Boolean,
+                ast: Box::new(TypedExpression::TrueLiteral),
+            },
+            AST::FalseLiteral => TypedAST {
+                ty: Type::Boolean,
+                ast: Box::new(TypedExpression::TrueLiteral),
+            },
+            AST::NumberLiteral(number) => TypedAST {
+                ty: Type::Number,
+                ast: Box::new(TypedExpression::NumberLiteral(*number)),
+            },
+            AST::Plus(operand1, operand2) => {
+                let typed_ast1 = TypedAST::typer(operand1, tenv);
+                let typed_ast2 = TypedAST::typer(operand2, tenv);
+
+                if typed_ast1.ty != Type::Number || typed_ast2.ty != Type::Number {
+                    panic!("Types differ in PlusC!")
+                }
+
+                TypedAST {
+                    ty: Type::Number,
+                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                }
             }
-            let then_type = tc_helper(&ifCStruct.then, tenv);
-            let else_type = tc_helper(&ifCStruct.els, tenv);
-            if then_type == else_type {
-                then_type
-            } else {
-                panic!("Types differ in then and else part of an if statement!")
+            AST::Multiply(operand1, operand2) => {
+                let typed_ast1 = TypedAST::typer(operand1, tenv);
+                let typed_ast2 = TypedAST::typer(operand2, tenv);
+
+                if typed_ast1.ty != Type::Number || typed_ast2.ty != Type::Number {
+                    panic!("Types differ in MultC!")
+                }
+
+                TypedAST {
+                    ty: Type::Number,
+                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                }
             }
-        }
-        AST::IdC(id) => {
-            if tenv.contains_key(id) {
-                tenv[id].clone()
-            } else {
-                panic!("Variable not saved in type environment")
+            AST::Equals(operand1, operand2) => {
+                let typed_ast1 = TypedAST::typer(operand1, tenv);
+                let typed_ast2 = TypedAST::typer(operand2, tenv);
+
+                if let Type::Function { .. } = typed_ast1.ty {
+                    panic!("EqC cannot compare type FunT")
+                } else if let Type::Function { .. } = typed_ast2.ty {
+                    panic!("EqC cannot compare type FunT")
+                } else if typed_ast1.ty != typed_ast2.ty {
+                    panic!("Types differ in MultC!")
+                }
+
+                TypedAST {
+                    ty: Type::Boolean,
+                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                }
             }
-        }
-        AST::AppC(appCStruct) => {
-            let fun_type = tc_helper(&appCStruct.func, tenv);
-            let arg_type = tc_helper(&appCStruct.arg, tenv);
-            match fun_type {
-                Type::FunT {
-                    arg: funT_arg,
-                    ret: funT_ret,
-                } => {
-                    if arg_type == *funT_arg {
-                        *funT_ret //dereferencing the box type
-                    } else {
-                        panic!("Argument type doesn't match declared type")
+            AST::If(if_struct) => {
+                let condition = TypedAST::typer(&if_struct.condition, tenv);
+                if condition.ty != Type::Boolean {
+                    panic!("Condition in an if statement is not boolean!")
+                }
+
+                let then = TypedAST::typer(&if_struct.then, tenv);
+                let els = TypedAST::typer(&if_struct.els, tenv);
+                if then.ty != els.ty {
+                    panic!("Types differ in then and else part of an if statement!")
+                }
+
+                TypedAST {
+                    ty: then.ty.clone(),
+                    ast: Box::new(TypedExpression::If(TypedIf {
+                        condition,
+                        then,
+                        els,
+                    })),
+                }
+            }
+            AST::Identifier(identifier) => {
+                if !tenv.contains_key(identifier) {
+                    panic!("Variable not saved in type environment")
+                }
+                TypedAST {
+                    ty: tenv[identifier].clone(),
+                    ast: Box::new(TypedExpression::Identifier(identifier.clone())),
+                }
+            }
+            AST::FunctionApplication(function_application_struct) => {
+                let function = TypedAST::typer(&function_application_struct.function, tenv);
+                match &function.ty {
+                    Type::Function {
+                        argument: function_argument_type,
+                        ret,
+                    } => {
+                        let argument = TypedAST::typer(&function_application_struct.argument, tenv);
+                        if **function_argument_type != argument.ty {
+                            panic!("Argument type doesn't match declared type")
+                        }
+
+                        TypedAST {
+                            ty: (**ret).clone(),
+                            ast: Box::new(TypedExpression::FunctionApplication(
+                                TypedFunctionApplication { function, argument },
+                            )),
+                        }
                     }
+                    _ => panic!("Not a function in appC"),
                 }
-                _ => panic!("Not a function in appC"),
             }
-        }
-        AST::RecC(recCStruct) => {
-            tenv.insert(
-                recCStruct.func_name.clone(),
-                Type::FunT {
-                    arg: Box::new(recCStruct.arg_type.clone()),
-                    ret: Box::new(recCStruct.ret_type.clone()),
-                },
-            );
-            tenv.insert(recCStruct.arg_name.clone(), recCStruct.arg_type.clone());
-            if recCStruct.ret_type == tc_helper(&recCStruct.body, tenv) {
-                let ret_type = tc_helper(&recCStruct.func_use, tenv);
-                tenv.remove(&recCStruct.func_name);
-                tenv.remove(&recCStruct.arg_name);
-                ret_type
-            } else {
-                panic!("Return type of recursive function does not match return type of the body!");
-            }
-        }
-        AST::FdC(fdCStruct) => {
-            tenv.insert(fdCStruct.arg_name.clone(), fdCStruct.arg_type.clone());
-            let body_ret = tc_helper(&fdCStruct.body, tenv);
-            if body_ret == fdCStruct.ret_type {
+            AST::FunctionDefinition(function_definition_struct) => {
+                tenv.insert(
+                    function_definition_struct.argument_name.clone(),
+                    function_definition_struct.argument_type.clone(),
+                );
+
+                let body = TypedAST::typer(&function_definition_struct.body, tenv);
+                if body.ty != function_definition_struct.return_type {
+                    panic!("Body type doesn't match declared type")
+                }
+
                 /*
-                 * Since the body has type checked we can remove the varaible name form the scope to
-                 * preseve a common understanding of scope. This allows us ot avoid cloning the HashMap.
+                 * Since the body has type checked we can remove the variable name form the scope to
+                 * preserve a common understanding of scope. This allows us ot avoid cloning the HashMap.
                  */
-                tenv.remove(&fdCStruct.arg_name);
-                Type::FunT {
-                    arg: Box::new(fdCStruct.arg_type.clone()),
-                    ret: Box::new(fdCStruct.ret_type.clone()),
+                tenv.remove(&function_definition_struct.argument_name);
+
+                TypedAST {
+                    ty: Type::Function {
+                        argument: Box::new(function_definition_struct.argument_type.clone()),
+                        ret: Box::new(function_definition_struct.return_type.clone()),
+                    },
+                    ast: Box::new(TypedExpression::FunctionDefinition(
+                        TypedFunctionDefinition {
+                            argument_name: function_definition_struct.argument_name.clone(),
+                            argument_type: function_definition_struct.argument_type.clone(),
+                            return_type: function_definition_struct.return_type.clone(),
+                            body,
+                        },
+                    )),
                 }
-            } else {
-                panic!("Body type doesn't match declared type")
+            }
+            AST::RecursiveFunction(recursive_function_struct) => {
+                tenv.insert(
+                    recursive_function_struct.function_name.clone(),
+                    Type::Function {
+                        argument: Box::new(recursive_function_struct.argument_type.clone()),
+                        ret: Box::new(recursive_function_struct.return_type.clone()),
+                    },
+                );
+                tenv.insert(
+                    recursive_function_struct.argument_name.clone(),
+                    recursive_function_struct.argument_type.clone(),
+                );
+
+                let body = TypedAST::typer(&recursive_function_struct.body, tenv);
+                if recursive_function_struct.return_type != body.ty {
+                    panic!(
+                        "Return type of recursive function does not match return type of the body!"
+                    );
+                }
+
+                let function_use = TypedAST::typer(&recursive_function_struct.function_use, tenv);
+
+                tenv.remove(&recursive_function_struct.function_name);
+                tenv.remove(&recursive_function_struct.argument_name);
+
+                TypedAST {
+                    ty: function_use.ty.clone(),
+                    ast: Box::new(TypedExpression::RecursiveFunction(TypedRecursiveFunction {
+                        function_name: recursive_function_struct.function_name.clone(),
+                        argument_name: recursive_function_struct.argument_name.clone(),
+                        argument_type: recursive_function_struct.argument_type.clone(),
+                        return_type: recursive_function_struct.return_type.clone(),
+                        body,
+                        function_use,
+                    })),
+                }
             }
         }
     }
+}
+
+pub fn type_of(ast: &AST) -> Type {
+    TypedAST::new(ast).ty
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::{AppCStruct, FdCStruct, RecCStruct};
+    use crate::parse::{FunctionApplication, FunctionDefinition, RecursiveFunction};
 
     #[test]
     fn eq_c() {
-        let input = Box::new(AST::EqC(Box::new(AST::NumC(0)), Box::new(AST::NumC(-5))));
-        assert_eq!(run(&input), Type::BoolT);
+        let input = Box::new(AST::Equals(
+            Box::new(AST::NumberLiteral(0)),
+            Box::new(AST::NumberLiteral(-5)),
+        ));
+        assert_eq!(type_of(&input), Type::Boolean);
     }
 
     #[test]
     #[should_panic]
     fn eq_c_fail_incompatible_type() {
-        let input = Box::new(AST::EqC(Box::new(AST::TrueC), Box::new(AST::NumC(-984))));
-        run(&input);
+        let input = Box::new(AST::Equals(
+            Box::new(AST::TrueLiteral),
+            Box::new(AST::NumberLiteral(-984)),
+        ));
+        type_of(&input);
     }
 
     #[test]
     #[should_panic]
     fn eq_c_fail_comparing_functions() {
-        let input = Box::new(AST::EqC(
-            Box::new(AST::FdC(FdCStruct {
-                arg_name: String::from("a"),
-                arg_type: Type::NumT,
-                ret_type: Type::NumT,
-                body: Box::new(AST::IdC(String::from("a"))),
+        let input = Box::new(AST::Equals(
+            Box::new(AST::FunctionDefinition(FunctionDefinition {
+                argument_name: String::from("a"),
+                argument_type: Type::Number,
+                return_type: Type::Number,
+                body: Box::new(AST::Identifier(String::from("a"))),
             })),
-            Box::new(AST::FdC(FdCStruct {
-                arg_name: String::from("a"),
-                arg_type: Type::NumT,
-                ret_type: Type::NumT,
-                body: Box::new(AST::IdC(String::from("a"))),
+            Box::new(AST::FunctionDefinition(FunctionDefinition {
+                argument_name: String::from("a"),
+                argument_type: Type::Number,
+                return_type: Type::Number,
+                body: Box::new(AST::Identifier(String::from("a"))),
             })),
         ));
-        run(&input);
+        type_of(&input);
     }
 
     #[test]
     fn ec_c_ret_type() {
-        let input = Box::new(AST::RecC(RecCStruct {
-            func_name: String::from("func"),
-            arg_name: String::from("arg"),
-            arg_type: Type::NumT,
-            ret_type: Type::NumT,
-            body: Box::new(AST::IdC(String::from("arg"))),
-            func_use: Box::new(AST::EqC(
-                Box::new(AST::NumC(1)),
-                Box::new(AST::AppC(AppCStruct {
-                    func: Box::new(AST::IdC(String::from("func"))),
-                    arg: Box::new(AST::NumC(1)),
+        let input = Box::new(AST::RecursiveFunction(RecursiveFunction {
+            function_name: String::from("func"),
+            argument_name: String::from("arg"),
+            argument_type: Type::Number,
+            return_type: Type::Number,
+            body: Box::new(AST::Identifier(String::from("arg"))),
+            function_use: Box::new(AST::Equals(
+                Box::new(AST::NumberLiteral(1)),
+                Box::new(AST::FunctionApplication(FunctionApplication {
+                    function: Box::new(AST::Identifier(String::from("func"))),
+                    argument: Box::new(AST::NumberLiteral(1)),
                 })),
             )),
         }));
-        assert_eq!(run(&input), Type::BoolT);
+        assert_eq!(type_of(&input), Type::Boolean);
     }
 }

@@ -1,5 +1,4 @@
 use clap::{App, Arg, SubCommand};
-use tlc;
 
 fn main() {
     let matches = App::new("Typed Lambda Calculus")
