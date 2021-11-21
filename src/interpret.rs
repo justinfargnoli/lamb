@@ -25,7 +25,7 @@ impl Data {
         }
     }
 
-    fn into_function(self) -> Function {
+    fn function(self) -> Function {
         if let Data::Function(function) = self {
             function
         } else {
@@ -44,7 +44,7 @@ pub fn interpret(ast: AST) -> Data {
     interpreter(ast, &mut HashMap::new())
 }
 
-fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
+fn interpreter(ast: AST, map: &mut HashMap<String, Vec<Data>>) -> Data {
     match ast {
         AST::NumC(number) => Data::Number(number),
         AST::PlusC(op1, op2) => {
@@ -55,7 +55,18 @@ fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
         }
         AST::TrueC => Data::Boolean(true),
         AST::FalseC => Data::Boolean(false),
-        AST::EqC(op1, op2) => Data::Boolean(interpreter(*op1, map) == interpreter(*op2, map)),
+        AST::EqC(lhs, rhs) => {
+            let lhs_data = interpreter(*lhs, map);
+            let rhs_data = interpreter(*rhs, map);
+
+            if let Data::Function(_) = lhs_data {
+                panic!()
+            } else if let Data::Function(_) = rhs_data {
+                panic!()
+            } else {
+                Data::Boolean(lhs_data == rhs_data)
+            }
+        }
         AST::IfC { cnd, then, els } => {
             if interpreter(*cnd, map).boolean() {
                 interpreter(*then, map)
@@ -66,20 +77,35 @@ fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
         AST::IdC(string) => (*map
             .get(&string)
             .unwrap_or_else(|| panic!("Unable to find identifier: {:?}", string.as_str())))
+        .last()
+        .unwrap()
         .clone(),
-        AST::AppC { func, arg } => {
-            let function = interpreter(*func, map).into_function();
-            let argument = interpreter(*arg, map);
-            map.insert(function.arg_name.clone(), argument);
-            let func_ret = interpreter(function.body, map);
-            println!("appC: {:#?}", function.arg_name);
-            map.remove(&function.arg_name).unwrap();
-            func_ret
-        }
         AST::FdC { arg_name, body, .. } => Data::Function(Function {
             arg_name,
             body: *body,
         }),
+        AST::AppC { func, arg } => {
+            let function = interpreter(*func, map).function();
+            let argument = interpreter(*arg, map);
+
+            map.entry(function.arg_name.clone())
+                .or_insert_with(Vec::new)
+                .push(argument);
+
+            let return_data = interpreter(function.body, map);
+
+            match map.get_mut(&function.arg_name) {
+                Some(data_values) => {
+                    data_values.pop();
+                    if data_values.is_empty() {
+                        map.remove(&function.arg_name);
+                    }
+                }
+                None => panic!()
+            }
+
+            return_data
+        }
         AST::RecC {
             func_name,
             arg_name,
@@ -87,14 +113,25 @@ fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
             func_use,
             ..
         } => {
-            map.insert(
-                func_name,
-                Data::Function(Function {
+            map.entry(func_name.clone())
+                .or_insert_with(Vec::new)
+                .push(Data::Function(Function {
                     arg_name,
                     body: *body,
-                }),
-            ); // add the function to the current scope
-            interpreter(*func_use, map)
+                })); // add the function to the current scope
+            let return_data = interpreter(*func_use, map);
+            
+            match map.get_mut(&func_name) {
+                Some(data_values) => {
+                    data_values.pop();
+                    if data_values.is_empty() {
+                        map.remove(&func_name);
+                    }
+                }
+                None => panic!()
+            }
+
+            return_data
         }
     }
 }
@@ -210,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn interpret_recc() {
+    fn interpret_recc_no_call() {
         assert_eq!(
             interpret(AST::RecC {
                 func_name: "recursive_fn".to_string(),
@@ -230,7 +267,56 @@ mod tests {
     }
 
     #[test]
+    fn interpret_recc_no_recursion() {
+        assert_eq!(
+            interpret(AST::RecC {
+                func_name: "recursive_fn".to_string(),
+                arg_name: "argument".to_string(),
+                arg_type: Type::NumT,
+                ret_type: Type::NumT,
+                body: Box::new(AST::IdC("argument".to_string())),
+                func_use: Box::new(AST::AppC {
+                    func: Box::new(AST::IdC("recursive_fn".to_string())),
+                    arg: Box::new(AST::NumC(-3))
+                }),
+            }),
+            Data::Number(-3)
+        )
+    }
+
+    #[test]
     fn interpret_recc_w_recursion() {
+        assert_eq!(
+            interpret(AST::RecC {
+                func_name: "recursive_fn".to_string(),
+                arg_name: "argument".to_string(),
+                arg_type: Type::NumT,
+                ret_type: Type::NumT,
+                body: Box::new(AST::IfC {
+                    cnd: Box::new(AST::EqC(
+                        Box::new(AST::IdC("argument".to_string())),
+                        Box::new(AST::NumC(1))
+                    )),
+                    then: Box::new(AST::NumC(1)),
+                    els: Box::new(AST::AppC {
+                        func: Box::new(AST::IdC("recursive_fn".to_string())),
+                        arg: Box::new(AST::PlusC(
+                            Box::new(AST::IdC("argument".to_string())),
+                            Box::new(AST::NumC(-1))
+                        ))
+                    })
+                }),
+                func_use: Box::new(AST::AppC {
+                    func: Box::new(AST::IdC("recursive_fn".to_string())),
+                    arg: Box::new(AST::NumC(3))
+                }),
+            }),
+            Data::Number(1)
+        )
+    }
+
+    #[test]
+    fn interpret_recc_w_recursion_hard() {
         assert_eq!(
             interpret(AST::RecC {
                 func_name: "recursive_fn".to_string(),
@@ -246,13 +332,10 @@ mod tests {
                     els: Box::new(AST::MultC(
                         Box::new(AST::IdC("argument".to_string())),
                         Box::new(AST::AppC {
-                            func: Box::new(AST::IdC("function".to_string())),
+                            func: Box::new(AST::IdC("recursive_fn".to_string())),
                             arg: Box::new(AST::PlusC(
-                                Box::new(AST::IdC("function".to_string())),
-                                Box::new(AST::PlusC(
-                                    Box::new(AST::IdC("argument".to_string())),
-                                    Box::new(AST::NumC(-1))
-                                ))
+                                Box::new(AST::IdC("argument".to_string())),
+                                Box::new(AST::NumC(-1))
                             ))
                         })
                     ))

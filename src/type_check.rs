@@ -30,7 +30,13 @@ pub fn tc(ast: AST, tenv: &mut HashMap<String, Type>) -> Type {
             }
         }
         AST::EqC(operand1, operand2) => {
-            if tc(*operand1, tenv) == tc(*operand2, tenv) {
+            let lhs_type = tc(*operand1, tenv);
+            let rhs_type = tc(*operand2, tenv);
+            if let Type::FunT { .. } = lhs_type {
+                panic!("Can't check equality of functions")
+            } else if let Type::FunT { .. } = rhs_type {
+                panic!("Can't check equality of functions")
+            } else if lhs_type == rhs_type {
                 Type::BoolT
             } else {
                 panic!("Types differ in MultC!")
