@@ -1,34 +1,48 @@
+use core::panic;
+
 use tlc::type_check::Type;
+
+fn file_test_type(file_name: &str, expected_type: Type) {
+    assert_eq!(tlc::type_check(file_name), expected_type);
+}
+
+fn file_test(file_name: &str, expected_type: Type, expected_result: u64) {
+    if let Type::Function { .. } = expected_type {
+        panic!();
+    }
+    assert_eq!(tlc::type_check("tests/inputs/input1.txt"), expected_type);
+    assert_eq!(tlc::compile("tests/inputs/input1.txt"), expected_result);
+}
 
 #[test]
 fn type_check_input_1() {
-    assert_eq!(tlc::type_check("tests/inputs/input1.txt"), Type::Number);
+    file_test("tests/inputs/input1.txt", Type::Number, 2);
 }
 
 #[test]
 fn type_check_input_2() {
-    assert_eq!(tlc::type_check("tests/inputs/input2.txt"), Type::Number);
+    file_test("tests/inputs/input2.txt", Type::Number, 3);
 }
 
 #[test]
 fn type_check_input_3() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input3.txt"),
+    file_test_type(
+        "tests/inputs/input3.txt",
         Type::Function {
             argument: Box::new(Type::Number),
-            ret: Box::new(Type::Number)
-        }
+            ret: Box::new(Type::Number),
+        },
     );
 }
 
 #[test]
 fn type_check_input_4() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input4.txt"),
+    file_test_type(
+        "tests/inputs/input4.txt",
         Type::Function {
             argument: Box::new(Type::Number),
-            ret: Box::new(Type::Number)
-        }
+            ret: Box::new(Type::Number),
+        },
     );
 }
 
@@ -40,7 +54,7 @@ fn type_check_input_5() {
 
 #[test]
 fn type_check_input_6() {
-    assert_eq!(tlc::type_check("tests/inputs/input6.txt"), Type::Number);
+    file_test("tests/inputs/input6.txt", Type::Number, 3);
 }
 
 #[test]
@@ -51,17 +65,17 @@ fn type_check_input_7() {
 
 #[test]
 fn type_check_input_8() {
-    assert_eq!(tlc::type_check("tests/inputs/input8.txt"), Type::Boolean);
+    file_test("tests/inputs/input8.txt", Type::Boolean, 1);
 }
 
 #[test]
 fn type_check_input_9() {
-    assert_eq!(tlc::type_check("tests/inputs/input9.txt"), Type::Boolean);
+    file_test("tests/inputs/input9.txt", Type::Boolean, 0);
 }
 
 #[test]
 fn type_check_input_10() {
-    assert_eq!(tlc::type_check("tests/inputs/input10.txt"), Type::Number);
+    file_test("tests/inputs/input10.txt", Type::Number, 1);
 }
 
 #[test]
@@ -78,55 +92,43 @@ fn type_check_input_12() {
 
 #[test]
 fn type_check_input_14() {
-    assert_eq!(tlc::type_check("tests/inputs/input14.txt"), Type::Boolean);
+    file_test("tests/inputs/input14.txt", Type::Boolean, 0);
 }
 
 #[test]
 fn type_check_input_15() {
-    assert_eq!(tlc::type_check("tests/inputs/input15.txt"), Type::Boolean);
+    file_test("tests/inputs/input15.txt", Type::Boolean, 0);
 }
 
 #[test]
 fn type_check_input_basic() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_basic.txt"),
-        Type::Boolean
-    );
+    file_test("tests/inputs/input_basic.txt", Type::Boolean, 0);
 }
 
 #[test]
 fn type_check_input_medium() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_medium.txt"),
+    file_test_type(
+        "tests/inputs/input_medium.txt",
         Type::Function {
             argument: Box::new(Type::Number),
-            ret: Box::new(Type::Number)
-        }
+            ret: Box::new(Type::Number),
+        },
     );
 }
 
 #[test]
 fn type_check_input_advanced() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_advanced.txt"),
-        Type::Number
-    );
+    file_test("tests/inputs/input_advanced.txt", Type::Number, 15);
 }
 
 #[test]
 fn type_check_input_super() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_super.txt"),
-        Type::Boolean
-    );
+    file_test("tests/inputs/input_super.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_rec_c_sumation() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_rec_c_sumation.txt"),
-        Type::Number
-    );
+fn type_check_input_rec_c_summation() {
+    file_test("tests/inputs/input_rec_c_summation.txt", Type::Number, 55);
 }
 
 #[test]
@@ -137,8 +139,5 @@ fn type_check_input_rec_c_fail() {
 
 #[test]
 fn type_check_input_rec_c_factorial() {
-    assert_eq!(
-        tlc::type_check("tests/inputs/input_rec_c_factorial.txt"),
-        Type::Number
-    );
+    file_test("tests/inputs/input_rec_c_factorial.txt", Type::Number, 120);
 }

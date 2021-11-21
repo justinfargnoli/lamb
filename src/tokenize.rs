@@ -2,15 +2,15 @@ use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
-    ParenLeft,
-    ParenRight,
+    LeftParenthesis,
+    RightParenthesis,
     Comma,
     Quote,
     NumberType,
     BooleanType,
     FunctionType,
     QuotedString(String),
-    NumberLiteral(i64),
+    NumberLiteral(u64),
     Equals,
     TrueLiteral,
     FalseLiteral,
@@ -27,22 +27,22 @@ pub enum Token {
 #[derive(Debug, PartialEq)]
 pub struct TokenStream {
     stream: VecDeque<Token>,
-    curr_index: usize,
+    current_index: usize,
 }
 
 impl TokenStream {
     pub fn build(character_stream: VecDeque<char>) -> TokenStream {
         TokenStream {
             stream: TokenStream::tokenize(character_stream),
-            curr_index: 0,
+            current_index: 0,
         }
     }
 
     #[allow(dead_code)] // used for tests in 'parse.rs'
-    pub fn build_test(token_stream: VecDeque<Token>, curr_index: usize) -> TokenStream {
+    pub fn build_test(token_stream: VecDeque<Token>, current_index: usize) -> TokenStream {
         TokenStream {
             stream: token_stream,
-            curr_index,
+            current_index,
         }
     }
 
@@ -51,29 +51,22 @@ impl TokenStream {
         while !char_stream.is_empty() {
             match char_stream.pop_front().unwrap() {
                 '(' => {
-                    tokens.push_back(Token::ParenLeft);
-                    let mut num_str = String::new();
-                    let mut negative = false;
-                    if *char_stream.front().unwrap() == '-' {
-                        negative = true;
-                        char_stream.pop_front().unwrap();
-                    }
-                    loop {
-                        if char_stream.front().unwrap().is_digit(10) {
-                            num_str.push(char_stream.pop_front().unwrap());
-                        } else if !num_str.is_empty() {
-                            let mut num = num_str.parse::<i64>().unwrap();
-                            if negative {
-                                num *= -1;
+                    tokens.push_back(Token::LeftParenthesis);
+                    {
+                        let mut num_str = String::new();
+                        loop {
+                            if char_stream.front().unwrap().is_digit(10) {
+                                num_str.push(char_stream.pop_front().unwrap());
+                            } else if !num_str.is_empty() {
+                                tokens.push_back(Token::NumberLiteral(num_str.parse::<u64>().unwrap()));
+                                break;
+                            } else {
+                                break;
                             }
-                            tokens.push_back(Token::NumberLiteral(num));
-                            break;
-                        } else {
-                            break;
                         }
                     }
                 }
-                ')' => tokens.push_back(Token::ParenRight),
+                ')' => tokens.push_back(Token::RightParenthesis),
                 ',' => tokens.push_back(Token::Comma),
                 '\"' => {
                     tokens.push_back(Token::Quote);
@@ -201,9 +194,9 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -212,9 +205,9 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(-2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -223,14 +216,14 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::Identifier));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Quote));
         assert_eq!(
             token_stream.next(),
             Some(Token::QuotedString(String::from("ab")))
         );
         assert_eq!(token_stream.next(), Some(Token::Quote));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -242,17 +235,17 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::Multiply));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -264,17 +257,17 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::Plus));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(2)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -299,17 +292,17 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::Equals));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(1)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(3)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -320,19 +313,19 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::If));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::FalseLiteral));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(1)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::NumLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::NumberLiteral(3)));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -343,7 +336,7 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::FunctionDefinition));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Quote));
         assert_eq!(
             token_stream.next(),
@@ -356,15 +349,15 @@ mod tests {
         assert_eq!(token_stream.next(), Some(Token::BooleanType));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::Identifier));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Quote));
         assert_eq!(
             token_stream.next(),
             Some(Token::QuotedString(String::from("x")))
         );
         assert_eq!(token_stream.next(), Some(Token::Quote));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 
     #[test]
@@ -375,9 +368,9 @@ mod tests {
         let mut token_stream = TokenStream::build(characters);
 
         assert_eq!(token_stream.next(), Some(Token::FunctionApplication));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::FunctionDefinition));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Quote));
         assert_eq!(
             token_stream.next(),
@@ -390,17 +383,17 @@ mod tests {
         assert_eq!(token_stream.next(), Some(Token::BooleanType));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::Identifier));
-        assert_eq!(token_stream.next(), Some(Token::ParenLeft));
+        assert_eq!(token_stream.next(), Some(Token::LeftParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Quote));
         assert_eq!(
             token_stream.next(),
             Some(Token::QuotedString(String::from("x")))
         );
         assert_eq!(token_stream.next(), Some(Token::Quote));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
         assert_eq!(token_stream.next(), Some(Token::Comma));
         assert_eq!(token_stream.next(), Some(Token::FalseLiteral));
-        assert_eq!(token_stream.next(), Some(Token::ParenRight));
+        assert_eq!(token_stream.next(), Some(Token::RightParenthesis));
     }
 }

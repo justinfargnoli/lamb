@@ -1,9 +1,6 @@
 use crate::{
     type_check::Type,
-    type_check::{
-        TypedAST, TypedASTEnum, TypedFunctionApplication, TypedFunctionDefinition,
-        TypedRecursiveFunction,
-    },
+    type_check::{TypedAST, TypedASTEnum},
 };
 
 use inkwell::{
@@ -12,7 +9,7 @@ use inkwell::{
     module::Module,
     support::LLVMString,
     types::{BasicType, BasicTypeEnum, FunctionType},
-    values::{BasicValueEnum, CallSiteValue, FunctionValue, IntValue},
+    values::{BasicValueEnum, CallableValue, FunctionValue},
     AddressSpace, IntPredicate,
 };
 
@@ -53,7 +50,7 @@ impl<'ctx> CodeGen<'ctx> {
         let main_return_type = match typed_ast.ty {
             Type::Number => self.context.i64_type(),
             Type::Boolean => self.context.bool_type(),
-            _ => unreachable!(),
+            _ => panic!("Cannot compile a function that returns a function"),
         };
         let main_function = self.module.add_function(
             "tlc_main_function",
@@ -64,39 +61,12 @@ impl<'ctx> CodeGen<'ctx> {
         let main_basic_block = self.context.append_basic_block(main_function, "entry");
         self.builder.position_at_end(main_basic_block);
 
-        match typed_ast.ty {
-            Type::Number | Type::Boolean => {
-                let return_value = self.codegen(typed_ast).into_int_value();
-                self.builder.build_return(Some(&return_value))
-            }
-            _ => panic!("Cannot compile a function that returns a function"),
-        };
+        let return_value = self.codegen(typed_ast).into_int_value();
+        self.builder.build_return(Some(&return_value));
 
         main_function.verify(false);
 
         main_function
-    }
-
-    fn function(&mut self, typed_ast: &TypedAST) -> FunctionValue<'ctx> {
-        match &*typed_ast.ast {
-            TypedASTEnum::If(_if_struct) => {
-                unimplemented!()
-            }
-            TypedASTEnum::Identifier(_) => unimplemented!(),
-            TypedASTEnum::FunctionDefinition(_def_fn) => {
-                // self.function_definition(def_fn)
-                unimplemented!()
-            }
-            TypedASTEnum::FunctionApplication(_app_fn) => {
-                // self.function_application(&app_fn)
-                unimplemented!()
-            }
-            TypedASTEnum::RecursiveFunction(_rec_fn) => {
-                // self.recursive_function(&rec_fn)
-                unimplemented!()
-            }
-            _ => unreachable!(),
-        }
     }
 
     fn codegen(&mut self, typed_ast: &TypedAST) -> BasicValueEnum<'ctx> {
@@ -137,17 +107,59 @@ impl<'ctx> CodeGen<'ctx> {
                 unimplemented!()
             }
             TypedASTEnum::Identifier(_) => unimplemented!(),
-            TypedASTEnum::FunctionDefinition(_def_fn) => {
-                // self.function_definition(def_fn)
-                unimplemented!()
+            TypedASTEnum::FunctionApplication(function_application) => self
+                .builder
+                .build_call(
+                    CallableValue::try_from(self.codegen(&function_application.function)).unwrap(),
+                    &[self.codegen(&function_application.argument).into()],
+                    "tlc_function_call",
+                )
+                .try_as_basic_value()
+                .unwrap_left(),
+            TypedASTEnum::FunctionDefinition(function_definition) => {
+                let function_type = self.function_prototype(
+                    &function_definition.return_type,
+                    &function_definition.argument_type,
+                );
+                let function_value = self
+                    .module
+                    .add_function("tlc_function", function_type, None);
+
+                let function_entry_basic_block =
+                    self.context.append_basic_block(function_value, "entry");
+                self.builder.position_at_end(function_entry_basic_block);
+
+                let return_value = self.codegen(&function_definition.body);
+                self.builder.build_return(Some(&return_value));
+
+                function_value.as_global_value().as_pointer_value().into()
             }
-            TypedASTEnum::FunctionApplication(_app_fn) => {
-                // self.function_application(&app_fn);
-                unimplemented!()
-            }
-            TypedASTEnum::RecursiveFunction(_rec_fn) => {
-                // self.recursive_function(&rec_fn);
-                unimplemented!()
+            TypedASTEnum::RecursiveFunction(recursive_function) => {
+                let function_type = self.function_prototype(
+                    &recursive_function.return_type,
+                    &recursive_function.argument_type,
+                );
+                let function_value = self.module.add_function(
+                    &recursive_function.function_name,
+                    function_type,
+                    None,
+                );
+
+                let function_entry_basic_block =
+                    self.context.append_basic_block(function_value, "entry");
+                self.builder.position_at_end(function_entry_basic_block);
+
+                let return_value = self.codegen(&recursive_function.body);
+                self.builder.build_return(Some(&return_value));
+
+                self.builder.position_at_end(
+                    function_value
+                        .get_previous_function()
+                        .unwrap()
+                        .get_last_basic_block()
+                        .unwrap(),
+                );
+                self.codegen(&recursive_function.function_use)
             }
         }
     }
@@ -169,75 +181,6 @@ impl<'ctx> CodeGen<'ctx> {
         let return_type = self.llvm_basic_type(ret);
 
         return_type.fn_type(&[argument_type], false)
-    }
-
-    fn function_definition(&mut self, def_fn: &TypedFunctionDefinition) -> FunctionValue<'ctx> {
-        let function_type = self.function_prototype(&def_fn.return_type, &def_fn.argument_type);
-        let function_value = self
-            .module
-            .add_function("tlc_function", function_type, None);
-
-        self.context.append_basic_block(function_value, "entry");
-
-        match def_fn.return_type {
-            Type::Number => {
-                let return_value = self.codegen(&def_fn.body).into_int_value();
-                self.builder.build_return(Some(&return_value));
-            }
-            Type::Boolean => {
-                let return_value = self.codegen(&def_fn.body).into_int_value();
-                self.builder.build_return(Some(&return_value));
-            }
-            Type::Function { .. } => {
-                let return_value = self
-                    .function(&def_fn.body)
-                    .as_global_value()
-                    .as_pointer_value();
-                self.builder.build_return(Some(&return_value));
-            }
-        }
-
-        function_value
-    }
-
-    fn function_application(&mut self, _app_fn: &TypedFunctionApplication) -> CallSiteValue<'ctx> {
-        // let function_value = self.function(&*app_fn.func);
-        // let argument = self.number(&*app_fn.arg);
-        // self.builder.build_call(
-        //     function_value,
-        //     &[BasicValueEnum::IntValue(argument)],
-        //     "call",
-        // )
-        unimplemented!()
-    }
-
-    fn recursive_function(&mut self, rec_fn: &TypedRecursiveFunction) {
-        let function_type = self.function_prototype(&rec_fn.return_type, &rec_fn.argument_type);
-        let function_value = self
-            .module
-            .add_function(&rec_fn.function_name, function_type, None);
-
-        self.context.append_basic_block(function_value, "entry");
-
-        match rec_fn.return_type {
-            Type::Number => {
-                let return_value = self.codegen(&rec_fn.body).into_int_value();
-                self.builder.build_return(Some(&return_value));
-            }
-            Type::Boolean => {
-                let return_value = self.codegen(&rec_fn.body).into_int_value();
-                self.builder.build_return(Some(&return_value));
-            }
-            Type::Function { .. } => {
-                let return_value = self
-                    .function(&rec_fn.body)
-                    .as_global_value()
-                    .as_pointer_value();
-                self.builder.build_return(Some(&return_value));
-            }
-        }
-
-        // todo: compile rec_fn.func_use
     }
 }
 

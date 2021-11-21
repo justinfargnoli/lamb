@@ -3,7 +3,7 @@ use crate::tokenize::{Token, TokenStream};
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
-    NumberLiteral(i64),
+    NumberLiteral(u64),
     Plus(Box<AST>, Box<AST>),
     Multiply(Box<AST>, Box<AST>),
     TrueLiteral,
@@ -55,38 +55,38 @@ impl AST {
                     Token::TrueLiteral => AST::TrueLiteral,
                     Token::FalseLiteral => AST::FalseLiteral,
                     Token::NumLiteral => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         if let Token::NumberLiteral(number) = token_stream.next().unwrap() {
-                            assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                            assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                             AST::NumberLiteral(number)
                         } else {
                             panic!("Number not found in NumC")
                         }
                     }
                     Token::Plus => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::Plus(Box::new(ast1), Box::new(ast2))
                     }
                     Token::Multiply => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::Multiply(Box::new(ast1), Box::new(ast2))
                     }
                     Token::If => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast3 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::If(If {
                             condition: Box::new(ast1),
                             then: Box::new(ast2),
@@ -94,7 +94,7 @@ impl AST {
                         })
                     }
                     Token::Identifier => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
                         match token_stream.next().unwrap() {
@@ -104,15 +104,15 @@ impl AST {
                             _ => panic!("String not found!"),
                         }
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         string_ast
                     }
                     Token::FunctionApplication => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::FunctionApplication(FunctionApplication {
                             function: Box::new(ast1),
                             argument: Box::new(ast2),
@@ -120,7 +120,7 @@ impl AST {
                     }
                     Token::FunctionDefinition => {
                         //THE ARGUMENT NAME
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let string_ast;
                         match token_stream.next().unwrap() {
@@ -143,7 +143,7 @@ impl AST {
                         //THE BODY
                         let ast_body = AST::build(token_stream);
 
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
 
                         AST::FunctionDefinition(FunctionDefinition {
                             argument_name: string_ast,
@@ -153,15 +153,15 @@ impl AST {
                         })
                     }
                     Token::Equals => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         let ast1 = AST::build(token_stream);
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         let ast2 = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::Equals(Box::new(ast1), Box::new(ast2))
                     }
                     Token::RecursiveFunction => {
-                        assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                        assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                         // 1st parameter
                         assert_eq!(Token::Quote, token_stream.next().unwrap());
                         let rec_func_name;
@@ -200,7 +200,7 @@ impl AST {
                         assert_eq!(Token::Comma, token_stream.next().unwrap());
                         // 6th parameter
                         let rec_func_use_ast = AST::build(token_stream);
-                        assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                        assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                         AST::RecursiveFunction(RecursiveFunction {
                             function_name: rec_func_name,
                             argument_name: rec_arg_name,
@@ -223,11 +223,11 @@ impl AST {
                 Token::NumberType => Type::Number,
                 Token::BooleanType => Type::Boolean,
                 Token::FunctionType => {
-                    assert_eq!(Token::ParenLeft, token_stream.next().unwrap());
+                    assert_eq!(Token::LeftParenthesis, token_stream.next().unwrap());
                     let box1 = AST::parse_type(token_stream);
                     assert_eq!(Token::Comma, token_stream.next().unwrap());
                     let box2 = AST::parse_type(token_stream);
-                    assert_eq!(Token::ParenRight, token_stream.next().unwrap());
+                    assert_eq!(Token::RightParenthesis, token_stream.next().unwrap());
                     Type::Function {
                         argument: Box::new(box1),
                         ret: Box::new(box2),
@@ -249,9 +249,9 @@ mod tests {
     fn num_c_1() {
         let tokens = VecDeque::from(vec![
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(AST::build(&mut token_stream), AST::NumberLiteral(1));
@@ -261,17 +261,17 @@ mod tests {
     fn plus_c_1_2() {
         let tokens = VecDeque::from(vec![
             Token::Plus,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
             Token::Comma,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            Token::ParenRight,
+            Token::RightParenthesis,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
@@ -288,14 +288,14 @@ mod tests {
     fn plus_c_1_num_c_2() {
         let tokens = VecDeque::from(vec![
             Token::Plus,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
             Token::Comma,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            Token::ParenRight,
+            Token::RightParenthesis,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
@@ -305,17 +305,17 @@ mod tests {
     fn mult_c_1_2() {
         let tokens = VecDeque::from(vec![
             Token::Multiply,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
             Token::Comma,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            Token::ParenRight,
+            Token::RightParenthesis,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
@@ -333,17 +333,17 @@ mod tests {
         //testing plusC(numC(1), numC(2) -> this should panic (missing right parenthesis)
         let tokens = VecDeque::from(vec![
             Token::Plus,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
             Token::Comma,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            // Token::ParenRight,
+            Token::RightParenthesis,
+            // Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
@@ -354,13 +354,13 @@ mod tests {
         //testing if(true, true, false)
         let tokens = VecDeque::from(vec![
             Token::If,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::TrueLiteral,
             Token::Comma,
             Token::TrueLiteral,
             Token::Comma,
             Token::FalseLiteral,
-            Token::ParenRight,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
@@ -378,12 +378,12 @@ mod tests {
         //testing if(true, true false)
         let tokens = VecDeque::from(vec![
             Token::If,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::TrueLiteral,
             Token::Comma,
             Token::TrueLiteral,
             Token::FalseLiteral,
-            Token::ParenRight,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
@@ -392,11 +392,11 @@ mod tests {
     fn id_c() {
         let tokens = VecDeque::from(vec![
             Token::Identifier,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::Quote,
             Token::QuotedString("x".to_string()),
             Token::Quote,
-            Token::ParenRight,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         assert_eq!(
@@ -410,10 +410,10 @@ mod tests {
         //testing id("x)
         let tokens = VecDeque::from(vec![
             Token::Identifier,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::Quote,
             Token::QuotedString("x".to_string()),
-            Token::ParenRight,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
@@ -424,17 +424,17 @@ mod tests {
     fn eq_c() {
         let tokens = VecDeque::from(vec![
             Token::Equals,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
             Token::Comma,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            Token::ParenRight,
+            Token::RightParenthesis,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
@@ -445,16 +445,16 @@ mod tests {
     fn eq_c_fail() {
         let tokens = VecDeque::from(vec![
             Token::Equals,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(1),
-            Token::ParenRight,
+            Token::RightParenthesis,
             Token::NumLiteral,
-            Token::ParenLeft,
+            Token::LeftParenthesis,
             Token::NumberLiteral(2),
-            Token::ParenRight,
-            Token::ParenRight,
+            Token::RightParenthesis,
+            Token::RightParenthesis,
         ]);
         let mut token_stream = TokenStream::build_test(tokens, 0);
         AST::build(&mut token_stream);
