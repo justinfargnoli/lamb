@@ -3,7 +3,7 @@ use crate::tokenize::{Token, TokenStream};
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
-    NumberLiteral(u64),
+    NumberLiteral(i64),
     Plus(Box<AST>, Box<AST>),
     Multiply(Box<AST>, Box<AST>),
     TrueLiteral,

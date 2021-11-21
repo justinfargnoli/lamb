@@ -83,7 +83,7 @@ impl TypedAST {
             },
             AST::FalseLiteral => TypedAST {
                 ty: Type::Boolean,
-                ast: Box::new(TypedASTEnum::TrueLiteral),
+                ast: Box::new(TypedASTEnum::FalseLiteral),
             },
             AST::NumberLiteral(number) => TypedAST {
                 ty: Type::Number,
@@ -264,6 +264,18 @@ pub fn type_of(ast: &AST) -> Type {
 mod tests {
     use super::*;
     use crate::parse::{FunctionApplication, FunctionDefinition, RecursiveFunction};
+
+    #[test]
+    fn false_literal() {
+        let input = Box::new(AST::FalseLiteral);
+        assert_eq!(
+            TypedAST::new(&input),
+            TypedAST {
+                ty: Type::Boolean,
+                ast: Box::new(TypedASTEnum::FalseLiteral)
+            }
+        );
+    }
 
     #[test]
     fn eq_c() {

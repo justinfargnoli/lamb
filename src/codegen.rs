@@ -13,6 +13,8 @@ use inkwell::{
     AddressSpace, IntPredicate,
 };
 
+use std::convert::{TryFrom, TryInto};
+
 pub fn run(ast: &TypedAST) -> Result<u64, LLVMString> {
     CodeGen::run(ast)
 }
@@ -71,12 +73,11 @@ impl<'ctx> CodeGen<'ctx> {
 
     fn codegen(&mut self, typed_ast: &TypedAST) -> BasicValueEnum<'ctx> {
         match &*typed_ast.ast {
-            TypedASTEnum::NumberLiteral(num) => {
-                if *num < 0 {
-                    panic!("Cannot codegen negative number: {}, num", num);
-                }
-                self.context.i64_type().const_int(*num as u64, false).into()
-            }
+            TypedASTEnum::NumberLiteral(num) => self
+                .context
+                .i64_type()
+                .const_int((*num).try_into().unwrap(), false)
+                .into(),
             TypedASTEnum::Plus(op1, op2) => {
                 let lhs = self.codegen(op1).into_int_value();
                 let rhs = self.codegen(op2).into_int_value();
@@ -107,15 +108,20 @@ impl<'ctx> CodeGen<'ctx> {
                 unimplemented!()
             }
             TypedASTEnum::Identifier(_) => unimplemented!(),
-            TypedASTEnum::FunctionApplication(function_application) => self
-                .builder
-                .build_call(
-                    CallableValue::try_from(self.codegen(&function_application.function)).unwrap(),
-                    &[self.codegen(&function_application.argument).into()],
-                    "tlc_function_call",
-                )
-                .try_as_basic_value()
-                .unwrap_left(),
+            TypedASTEnum::FunctionApplication(function_application) => {
+                let function_pointer = self
+                    .codegen(&function_application.function)
+                    .into_pointer_value();
+                let argument = self.codegen(&function_application.argument);
+                self.builder
+                    .build_call(
+                        CallableValue::try_from(function_pointer).unwrap(),
+                        &[argument.into()],
+                        "tlc_function_call",
+                    )
+                    .try_as_basic_value()
+                    .unwrap_left()
+            }
             TypedASTEnum::FunctionDefinition(function_definition) => {
                 let function_type = self.function_prototype(
                     &function_definition.return_type,
@@ -170,7 +176,7 @@ impl<'ctx> CodeGen<'ctx> {
             Type::Boolean => self.context.i8_type().into(),
             Type::Function { argument, ret } => self
                 .llvm_basic_type(ret)
-                .fn_type(&[self.llvm_basic_type(argument)], false)
+                .fn_type(&[self.llvm_basic_type(argument).into()], false)
                 .ptr_type(AddressSpace::Global)
                 .into(),
         }
@@ -180,7 +186,7 @@ impl<'ctx> CodeGen<'ctx> {
         let argument_type = self.llvm_basic_type(argument);
         let return_type = self.llvm_basic_type(ret);
 
-        return_type.fn_type(&[argument_type], false)
+        return_type.fn_type(&[argument_type.into()], false)
     }
 }
 
@@ -222,7 +228,7 @@ mod tests {
             ty: Type::Number,
             ast: Box::new(TypedASTEnum::NumberLiteral(-1)),
         };
-        let _ = CodeGen::run(&input);
+        let _ = CodeGen::run(&input).unwrap();
     }
 
     #[test]

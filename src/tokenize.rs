@@ -10,7 +10,7 @@ pub enum Token {
     BooleanType,
     FunctionType,
     QuotedString(String),
-    NumberLiteral(u64),
+    NumberLiteral(i64),
     Equals,
     TrueLiteral,
     FalseLiteral,
@@ -52,17 +52,24 @@ impl TokenStream {
             match char_stream.pop_front().unwrap() {
                 '(' => {
                     tokens.push_back(Token::LeftParenthesis);
-                    {
-                        let mut num_str = String::new();
-                        loop {
-                            if char_stream.front().unwrap().is_digit(10) {
-                                num_str.push(char_stream.pop_front().unwrap());
-                            } else if !num_str.is_empty() {
-                                tokens.push_back(Token::NumberLiteral(num_str.parse::<u64>().unwrap()));
-                                break;
-                            } else {
-                                break;
+                    let mut num_str = String::new();
+                    let mut negative = false;
+                    if *char_stream.front().unwrap() == '-' {
+                        negative = true;
+                        char_stream.pop_front().unwrap();
+                    }
+                    loop {
+                        if char_stream.front().unwrap().is_digit(10) {
+                            num_str.push(char_stream.pop_front().unwrap());
+                        } else if !num_str.is_empty() {
+                            let mut num = num_str.parse::<i64>().unwrap();
+                            if negative {
+                                num *= -1;
                             }
+                            tokens.push_back(Token::NumberLiteral(num));
+                            break;
+                        } else {
+                            break;
                         }
                     }
                 }

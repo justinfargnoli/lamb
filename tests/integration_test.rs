@@ -10,22 +10,22 @@ fn file_test(file_name: &str, expected_type: Type, expected_result: u64) {
     if let Type::Function { .. } = expected_type {
         panic!();
     }
-    assert_eq!(tlc::type_check("tests/inputs/input1.txt"), expected_type);
-    assert_eq!(tlc::compile("tests/inputs/input1.txt"), expected_result);
+    assert_eq!(tlc::type_check(file_name), expected_type);
+    assert_eq!(tlc::compile(file_name).unwrap(), expected_result);
 }
 
 #[test]
-fn type_check_input_1() {
+fn input_1() {
     file_test("tests/inputs/input1.txt", Type::Number, 2);
 }
 
 #[test]
-fn type_check_input_2() {
+fn input_2() {
     file_test("tests/inputs/input2.txt", Type::Number, 3);
 }
 
 #[test]
-fn type_check_input_3() {
+fn input_3() {
     file_test_type(
         "tests/inputs/input3.txt",
         Type::Function {
@@ -36,7 +36,7 @@ fn type_check_input_3() {
 }
 
 #[test]
-fn type_check_input_4() {
+fn input_4() {
     file_test_type(
         "tests/inputs/input4.txt",
         Type::Function {
@@ -48,65 +48,65 @@ fn type_check_input_4() {
 
 #[test]
 #[should_panic]
-fn type_check_input_5() {
+fn input_5() {
     tlc::type_check("tests/inputs/input5.txt");
 }
 
 #[test]
-fn type_check_input_6() {
+fn input_6() {
     file_test("tests/inputs/input6.txt", Type::Number, 3);
 }
 
 #[test]
 #[should_panic]
-fn type_check_input_7() {
+fn input_7() {
     tlc::type_check("tests/inputs/input7.txt");
 }
 
 #[test]
-fn type_check_input_8() {
+fn input_8() {
     file_test("tests/inputs/input8.txt", Type::Boolean, 1);
 }
 
 #[test]
-fn type_check_input_9() {
+fn input_9() {
     file_test("tests/inputs/input9.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_10() {
+fn input_10() {
     file_test("tests/inputs/input10.txt", Type::Number, 1);
 }
 
 #[test]
 #[should_panic]
-fn type_check_input_11() {
+fn input_11() {
     tlc::type_check("tests/inputs/input11.txt");
 }
 
 #[test]
 #[should_panic]
-fn type_check_input_12() {
+fn input_12() {
     tlc::type_check("tests/inputs/input12.txt");
 }
 
 #[test]
-fn type_check_input_14() {
+fn input_14() {
     file_test("tests/inputs/input14.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_15() {
+fn input_15() {
     file_test("tests/inputs/input15.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_basic() {
+fn input_basic() {
     file_test("tests/inputs/input_basic.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_medium() {
+fn input_medium() {
     file_test_type(
         "tests/inputs/input_medium.txt",
         Type::Function {
@@ -117,27 +117,27 @@ fn type_check_input_medium() {
 }
 
 #[test]
-fn type_check_input_advanced() {
+fn input_advanced() {
     file_test("tests/inputs/input_advanced.txt", Type::Number, 15);
 }
 
 #[test]
-fn type_check_input_super() {
+fn input_super() {
     file_test("tests/inputs/input_super.txt", Type::Boolean, 0);
 }
 
 #[test]
-fn type_check_input_rec_c_summation() {
+fn input_rec_c_summation() {
     file_test("tests/inputs/input_rec_c_summation.txt", Type::Number, 55);
 }
 
 #[test]
 #[should_panic]
-fn type_check_input_rec_c_fail() {
+fn input_rec_c_fail() {
     tlc::type_check("tests/inputs/input_rec_c_fail.txt");
 }
 
 #[test]
-fn type_check_input_rec_c_factorial() {
+fn input_rec_c_factorial() {
     file_test("tests/inputs/input_rec_c_factorial.txt", Type::Number, 120);
 }
