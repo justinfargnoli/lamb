@@ -3,7 +3,7 @@
 use crate::parse::AST;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq)]
 pub enum Type {
     NumT,
     BoolT,

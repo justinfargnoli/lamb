@@ -1,3 +1,4 @@
+mod interpret;
 mod format;
 mod codegen;
 mod parse;
@@ -5,6 +6,7 @@ mod read;
 mod tokenize;
 pub mod type_check;
 
+use interpret::Data;
 use parse::AST;
 use std::collections::HashMap;
 use tokenize::TokenStream;
@@ -16,6 +18,12 @@ pub fn type_check(input_file: &str) -> Type {
     let ast = AST::build(&mut tokenizer);
     type_check::tc(ast, &mut HashMap::new())
 }
+
+pub fn interpret(input_file: &str) -> Data {
+    let characters = read::build(input_file).unwrap();
+    let mut tokenizer = TokenStream::build(characters);
+    let ast = AST::build(&mut tokenizer);
+    interpret::interpret(ast)
 
 pub fn format(input_file: &str) {
     let characters = read::build(input_file).unwrap();

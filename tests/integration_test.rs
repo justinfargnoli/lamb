@@ -1,3 +1,4 @@
+use tc200::interpret::Data;
 use tc200::type_check::Type;
 
 #[test]
@@ -140,5 +141,13 @@ fn type_check_input_rec_c_factorial() {
     assert_eq!(
         tc200::type_check("tests/inputs/input_rec_c_factorial.txt"),
         Type::NumT
+    );
+}
+
+#[test]
+fn interpret_rec_c_factorial() {
+    assert_eq!(
+        tc200::interpret("tests/inputs/input_rec_c_factorial.txt"),
+        Data::Number(120)
     );
 }
