@@ -1,5 +1,4 @@
 use std::env;
-use tc200;
 
 fn main() {
     let input_file = env::args().nth(1).expect("Usage: & tc <input file>");

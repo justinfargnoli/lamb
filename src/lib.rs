@@ -1,6 +1,5 @@
-mod interpret;
 mod format;
-mod codegen;
+pub mod interpret;
 mod parse;
 mod read;
 mod tokenize;
@@ -24,10 +23,11 @@ pub fn interpret(input_file: &str) -> Data {
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
     interpret::interpret(ast)
+}
 
 pub fn format(input_file: &str) {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    format::format(ast);
+    format::format(&ast);
 }

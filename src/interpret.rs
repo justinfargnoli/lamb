@@ -65,7 +65,7 @@ fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
         }
         AST::IdC(string) => (*map
             .get(&string)
-            .expect(format!("Unable to find identifier: {:?}", string.as_str()).as_str()))
+            .unwrap_or_else(|| panic!("Unable to find identifier: {:?}", string.as_str())))
         .clone(),
         AST::AppC { func, arg } => {
             let function = interpreter(*func, map).into_function();
@@ -90,7 +90,7 @@ fn interpreter(ast: AST, map: &mut HashMap<String, Data>) -> Data {
             map.insert(
                 func_name,
                 Data::Function(Function {
-                    arg_name: arg_name.clone(),
+                    arg_name,
                     body: *body,
                 }),
             ); // add the function to the current scope

@@ -3,26 +3,26 @@ use crate::{parse::AST, type_check::Type};
 use std::fmt::Write;
 
 pub fn format(ast: &AST) -> String {
-    let output = String::new();
-    format_ast(ast, 0, &mut output);
+    let mut output = String::new();
+    format_ast(&mut output, ast, 0);
     output
 }
 
-fn write_line(output: impl Write, string: &str, tab_count: u32) {
-    let tabs = (0..tab_count).map(|_| "\t").collect::<String>();
+fn write_line(output: &mut String, string: &str, tab_count: u32) {
+    let mut tabs = (0..tab_count).map(|_| "\t").collect::<String>();
     tabs.push_str(string);
-    writeln!(output, "{}\n", tabs);
+    writeln!(output, "{}\n", tabs).unwrap();
 }
 
-fn format_binary(output: impl Write, name: &str, lhs: &AST, rhs: &AST, tab_count: u32) {
+fn format_binary(output: &mut String, name: &str, lhs: &AST, rhs: &AST, tab_count: u32) {
     write_line(output, format!("{}(", name).as_str(), tab_count);
-    format_ast(lhs, tab_count + 1, output);
+    format_ast(output, lhs, tab_count + 1);
     write_line(output, ",", tab_count + 1);
-    format_ast(rhs, tab_count + 1, output);
+    format_ast(output, rhs, tab_count + 1);
     write_line(output, ")", tab_count);
 }
 
-fn format_ast(ast: &AST, tab_count: u32, output: impl Write) {
+fn format_ast(output: &mut String, ast: &AST, tab_count: u32) {
     match ast {
         AST::TrueC => write_line(output, "trueC", tab_count),
         AST::FalseC => write_line(output, "falseC", tab_count),
@@ -34,11 +34,11 @@ fn format_ast(ast: &AST, tab_count: u32, output: impl Write) {
         AST::AppC { func, arg } => format_binary(output, "appC", func, arg, tab_count),
         AST::IfC { cnd, then, els } => {
             write_line(output, format!("{}(", "ifC").as_str(), tab_count);
-            format_ast(cnd, tab_count + 1, output);
+            format_ast(output, cnd, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_ast(then, tab_count + 1, output);
+            format_ast(output, then, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_ast(els, tab_count + 1, output);
+            format_ast(output, els, tab_count + 1);
             write_line(output, ")", tab_count);
         }
         AST::RecC {
@@ -58,13 +58,13 @@ fn format_ast(ast: &AST, tab_count: u32, output: impl Write) {
             write_line(output, ",", tab_count + 1);
             write_line(output, format!("\"{}\",", arg_name).as_str(), tab_count);
             write_line(output, ",", tab_count + 1);
-            // helper(body, tab_count + 1, output);
+            format_type(output, arg_type, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            // helper(body, tab_count + 1, output);
+            format_type(output, ret_type, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_ast(body, tab_count + 1, output);
+            format_ast(output, body, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_ast(&func_use, tab_count + 1, output);
+            format_ast(output, func_use, tab_count + 1);
             write_line(output, ")", tab_count);
         }
         AST::FdC {
@@ -76,26 +76,26 @@ fn format_ast(ast: &AST, tab_count: u32, output: impl Write) {
             write_line(output, format!("{}(", "fdC").as_str(), tab_count);
             write_line(output, format!("\"{}\",", arg_name).as_str(), tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            // helper(body, tab_count + 1, output);
+            format_type(output, arg_type, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            // helper(body, tab_count + 1, output);
+            format_type(output, ret_type, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_ast(body, tab_count + 1, output);
+            format_ast(output, body, tab_count + 1);
             write_line(output, ")", tab_count);
         }
     }
 }
 
-fn format_type(ty: &Type, tab_count: u32, output: impl Write) {
+fn format_type(output: &mut String, ty: &Type, tab_count: u32) {
     match ty {
         Type::BoolT => write_line(output, "boolT", tab_count),
         Type::NumT => write_line(output, "numT", tab_count),
         Type::FunT { arg, ret } => {
             write_line(output, format!("{}(", "funT").as_str(), tab_count);
-            format_type(arg, tab_count + 1, output);
+            format_type(output, arg, tab_count + 1);
             write_line(output, ",", tab_count + 1);
-            format_type(ret, tab_count + 1, output);
+            format_type(output, ret, tab_count + 1);
             write_line(output, ")", tab_count);
-        },
+        }
     }
 }
