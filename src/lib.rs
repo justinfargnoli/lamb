@@ -8,7 +8,7 @@ use inkwell::support::LLVMString;
 use parse::AST;
 use std::{collections::VecDeque, io};
 use tokenize::TokenStream;
-use type_check::Type;
+use type_check::{Type, TypedAST};
 
 pub fn read(input_file: &str) -> io::Result<VecDeque<char>> {
     read::build(input_file)
@@ -36,10 +36,10 @@ pub fn check(input_file: &str) -> Type {
     type_check::type_of(&ast)
 }
 
-pub fn compile(input_file: &str) -> Result<(), LLVMString> {
+pub fn compile(input_file: &str) -> Result<u64, LLVMString> {
     let characters = read::build(input_file).unwrap();
     let mut tokenizer = TokenStream::build(characters);
     let ast = AST::build(&mut tokenizer);
-    type_check::type_of(&ast);
-    codegen::run(&ast)
+    let typed_ast = TypedAST::new(&ast);
+    codegen::run(&typed_ast)
 }

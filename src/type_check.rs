@@ -19,7 +19,7 @@ impl Display for Type {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum TypedExpression {
+pub enum TypedASTEnum {
     NumberLiteral(i64),
     Plus(TypedAST, TypedAST),
     Multiply(TypedAST, TypedAST),
@@ -67,7 +67,7 @@ pub struct TypedRecursiveFunction {
 #[derive(Debug, PartialEq)]
 pub struct TypedAST {
     pub ty: Type,
-    pub ast: Box<TypedExpression>,
+    pub ast: Box<TypedASTEnum>,
 }
 
 impl TypedAST {
@@ -79,15 +79,15 @@ impl TypedAST {
         match ast {
             AST::TrueLiteral => TypedAST {
                 ty: Type::Boolean,
-                ast: Box::new(TypedExpression::TrueLiteral),
+                ast: Box::new(TypedASTEnum::TrueLiteral),
             },
             AST::FalseLiteral => TypedAST {
                 ty: Type::Boolean,
-                ast: Box::new(TypedExpression::TrueLiteral),
+                ast: Box::new(TypedASTEnum::TrueLiteral),
             },
             AST::NumberLiteral(number) => TypedAST {
                 ty: Type::Number,
-                ast: Box::new(TypedExpression::NumberLiteral(*number)),
+                ast: Box::new(TypedASTEnum::NumberLiteral(*number)),
             },
             AST::Plus(operand1, operand2) => {
                 let typed_ast1 = TypedAST::typer(operand1, tenv);
@@ -99,7 +99,7 @@ impl TypedAST {
 
                 TypedAST {
                     ty: Type::Number,
-                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                    ast: Box::new(TypedASTEnum::Plus(typed_ast1, typed_ast2)),
                 }
             }
             AST::Multiply(operand1, operand2) => {
@@ -112,7 +112,7 @@ impl TypedAST {
 
                 TypedAST {
                     ty: Type::Number,
-                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                    ast: Box::new(TypedASTEnum::Multiply(typed_ast1, typed_ast2)),
                 }
             }
             AST::Equals(operand1, operand2) => {
@@ -129,7 +129,7 @@ impl TypedAST {
 
                 TypedAST {
                     ty: Type::Boolean,
-                    ast: Box::new(TypedExpression::Plus(typed_ast1, typed_ast2)),
+                    ast: Box::new(TypedASTEnum::Equals(typed_ast1, typed_ast2)),
                 }
             }
             AST::If(if_struct) => {
@@ -146,7 +146,7 @@ impl TypedAST {
 
                 TypedAST {
                     ty: then.ty.clone(),
-                    ast: Box::new(TypedExpression::If(TypedIf {
+                    ast: Box::new(TypedASTEnum::If(TypedIf {
                         condition,
                         then,
                         els,
@@ -157,9 +157,10 @@ impl TypedAST {
                 if !tenv.contains_key(identifier) {
                     panic!("Variable not saved in type environment")
                 }
+
                 TypedAST {
                     ty: tenv[identifier].clone(),
-                    ast: Box::new(TypedExpression::Identifier(identifier.clone())),
+                    ast: Box::new(TypedASTEnum::Identifier(identifier.clone())),
                 }
             }
             AST::FunctionApplication(function_application_struct) => {
@@ -176,7 +177,7 @@ impl TypedAST {
 
                         TypedAST {
                             ty: (**ret).clone(),
-                            ast: Box::new(TypedExpression::FunctionApplication(
+                            ast: Box::new(TypedASTEnum::FunctionApplication(
                                 TypedFunctionApplication { function, argument },
                             )),
                         }
@@ -206,14 +207,12 @@ impl TypedAST {
                         argument: Box::new(function_definition_struct.argument_type.clone()),
                         ret: Box::new(function_definition_struct.return_type.clone()),
                     },
-                    ast: Box::new(TypedExpression::FunctionDefinition(
-                        TypedFunctionDefinition {
-                            argument_name: function_definition_struct.argument_name.clone(),
-                            argument_type: function_definition_struct.argument_type.clone(),
-                            return_type: function_definition_struct.return_type.clone(),
-                            body,
-                        },
-                    )),
+                    ast: Box::new(TypedASTEnum::FunctionDefinition(TypedFunctionDefinition {
+                        argument_name: function_definition_struct.argument_name.clone(),
+                        argument_type: function_definition_struct.argument_type.clone(),
+                        return_type: function_definition_struct.return_type.clone(),
+                        body,
+                    })),
                 }
             }
             AST::RecursiveFunction(recursive_function_struct) => {
@@ -243,7 +242,7 @@ impl TypedAST {
 
                 TypedAST {
                     ty: function_use.ty.clone(),
-                    ast: Box::new(TypedExpression::RecursiveFunction(TypedRecursiveFunction {
+                    ast: Box::new(TypedASTEnum::RecursiveFunction(TypedRecursiveFunction {
                         function_name: recursive_function_struct.function_name.clone(),
                         argument_name: recursive_function_struct.argument_name.clone(),
                         argument_type: recursive_function_struct.argument_type.clone(),
