@@ -1,11 +1,17 @@
-recC("S", 
+recC(
+	"S", 
 	"num", 
 	numT, 
 	numT, 
-	ifC(eqC(idC("num"),numC(1)), 
+	ifC(
+		eqC(idC("num"), numC(1)), 
 		numC(1), 
-		multC(idC("num"), 
-			appC(idC("S"), plusC(idC("num"), numC(-1)))
+		multC(
+			idC("num"), 
+			appC(
+				idC("S"), 
+				plusC(idC("num"), numC(-1))
+			)
 		)
 	), 
 	appC(idC("S"), numC(5))

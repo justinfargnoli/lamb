@@ -1,7 +1,7 @@
 use crate::parse::AST;
 use std::{collections::HashMap, fmt, fmt::Display};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq)]
 pub enum Type {
     Number,
     Boolean,
@@ -124,7 +124,7 @@ impl TypedAST {
                 } else if let Type::Function { .. } = typed_ast2.ty {
                     panic!("EqC cannot compare type FunT")
                 } else if typed_ast1.ty != typed_ast2.ty {
-                    panic!("Types differ in MultC!")
+                    panic!("Types differ in EqC!")
                 }
 
                 TypedAST {

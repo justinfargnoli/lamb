@@ -1,5 +1,6 @@
 use core::panic;
-
+use lamb::interpret::Data;
+use lamb::type_check::Type;
 use lamb::type_check::Type;
 
 fn test_to_file_name(test_name: &str) -> String {
@@ -172,4 +173,12 @@ fn input_nested_function() {
 #[test]
 fn input_undecidable_nested_function() {
     file_test("undecidable_nested_function", Type::Boolean, 0);
+}
+
+#[test]
+fn interpret_rec_c_factorial() {
+    assert_eq!(
+        tc200::interpret("tests/inputs/input_rec_c_factorial.txt"),
+        Data::Number(120)
+    );
 }

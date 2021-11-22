@@ -1,4 +1,6 @@
-# Type-Checker
+# Typed-Lambda-Calculus
+
+This repo aims to implement and build tools around the language described here https://papl.cs.brown.edu/2018/types.html .
 
 `export LLVM_SYS_130_PREFIX="/Users/justinfargnoli/Documents/projects/lamb/llvm/llvm-project-llvmorg-13.0.0/llvm/build"`
 
