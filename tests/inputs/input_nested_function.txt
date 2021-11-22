@@ -1,0 +1,20 @@
+appC(
+  appC(
+    fdC(
+      "outer_argument",
+      numT,
+      funT(numT, numT),
+      fdC(
+        "inner_argument",
+        numT, 
+        numT, 
+        plusC(
+          idC("outer_argument"),
+          idC("inner_argument")
+        )
+      )
+    ),
+    numC(6)
+  ),
+  numC(7)
+)
