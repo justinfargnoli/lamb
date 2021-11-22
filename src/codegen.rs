@@ -13,7 +13,10 @@ use inkwell::{
     AddressSpace, IntPredicate,
 };
 
-use std::convert::{TryFrom, TryInto};
+use std::{
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+};
 
 pub fn run(ast: &TypedAST) -> Result<u64, LLVMString> {
     CodeGen::run(ast)
@@ -21,8 +24,8 @@ pub fn run(ast: &TypedAST) -> Result<u64, LLVMString> {
 
 pub struct CodeGen<'ctx> {
     context: &'ctx Context,
-    module: Module<'ctx>,
     builder: Builder<'ctx>,
+    module: Module<'ctx>,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -30,7 +33,7 @@ impl<'ctx> CodeGen<'ctx> {
         let context = Context::create();
         let mut codegen = CodeGen {
             context: &context,
-            module: context.create_module("tlc_module"),
+            module: context.create_module("lamb_module"),
             builder: context.create_builder(),
         };
 
@@ -55,12 +58,12 @@ impl<'ctx> CodeGen<'ctx> {
             _ => panic!("Cannot compile a function that returns a function"),
         };
         let main_function = self.module.add_function(
-            "tlc_main_function",
+            "lamb_main_function",
             main_return_type.fn_type(&[], false),
             None,
         );
 
-        let main_basic_block = self.context.append_basic_block(main_function, "entry");
+        let main_basic_block = self.context.append_basic_block(main_function, "lamb_main_entry");
         self.builder.position_at_end(main_basic_block);
 
         let return_value = self.codegen(typed_ast).into_int_value();
@@ -71,7 +74,11 @@ impl<'ctx> CodeGen<'ctx> {
         main_function
     }
 
-    fn codegen(&mut self, typed_ast: &TypedAST) -> BasicValueEnum<'ctx> {
+    fn codegen_helper(
+        &mut self,
+        typed_ast: &TypedAST,
+        argument_values: &mut HashMap<String, BasicValueEnum<'ctx>>,
+    ) -> BasicValueEnum<'ctx> {
         match &*typed_ast.ast {
             TypedASTEnum::NumberLiteral(num) => self
                 .context
@@ -79,71 +86,129 @@ impl<'ctx> CodeGen<'ctx> {
                 .const_int((*num).try_into().unwrap(), false)
                 .into(),
             TypedASTEnum::Plus(op1, op2) => {
-                let lhs = self.codegen(op1).into_int_value();
-                let rhs = self.codegen(op2).into_int_value();
-                self.builder.build_int_add(lhs, rhs, "tlc_plus").into()
+                let lhs = self.codegen_helper(op1, argument_values).into_int_value();
+                let rhs = self.codegen_helper(op2, argument_values).into_int_value();
+                self.builder.build_int_add(lhs, rhs, "lamb_plus").into()
             }
             TypedASTEnum::Multiply(op1, op2) => {
-                let lhs = self.codegen(op1).into_int_value();
-                let rhs = self.codegen(op2).into_int_value();
-                self.builder.build_int_mul(lhs, rhs, "tlc_multiply").into()
+                let lhs = self.codegen_helper(op1, argument_values).into_int_value();
+                let rhs = self.codegen_helper(op2, argument_values).into_int_value();
+                self.builder.build_int_mul(lhs, rhs, "lamb_multiply").into()
             }
             TypedASTEnum::TrueLiteral => self.context.bool_type().const_int(1, false).into(),
             TypedASTEnum::FalseLiteral => self.context.bool_type().const_int(0, false).into(),
             TypedASTEnum::Equals(op1, op2) => {
-                let lhs = self.codegen(op1).into_int_value();
-                let rhs = self.codegen(op2).into_int_value();
+                let lhs = self.codegen_helper(op1, argument_values).into_int_value();
+                let rhs = self.codegen_helper(op2, argument_values).into_int_value();
                 let comparison =
                     self.builder
-                        .build_int_compare(IntPredicate::EQ, lhs, rhs, "tlc_equals");
+                        .build_int_compare(IntPredicate::EQ, lhs, rhs, "lamb_equals");
                 self.builder
                     .build_int_cast(
                         comparison,
                         self.context.bool_type(),
-                        "tlc_equals_i64_to_i1_cast",
+                        "lamb_equals_i64_to_i1_cast",
                     )
                     .into()
             }
-            TypedASTEnum::If(_if_struct) => {
-                unimplemented!()
+            TypedASTEnum::If(if_struct) => {
+                let condition = self.codegen_helper(&if_struct.condition, argument_values);
+                let then_block = self.context.insert_basic_block_after(
+                    self.builder.get_insert_block().unwrap(),
+                    "lamb_then_block",
+                );
+                let else_block = self.context.insert_basic_block_after(
+                    self.builder.get_insert_block().unwrap(),
+                    "lamb_else_block",
+                );
+                self.builder.build_conditional_branch(
+                    condition.into_int_value(),
+                    then_block,
+                    else_block,
+                );
+                
+                let post_dominator_block = self.context.insert_basic_block_after(
+                    self.builder.get_insert_block().unwrap(),
+                    "lamb_post_dominator_block",
+                );
+
+                self.builder.position_at_end(then_block);
+                let then_value = self.codegen_helper(&if_struct.then, argument_values);
+                self.builder
+                    .build_unconditional_branch(post_dominator_block);
+
+                self.builder.position_at_end(else_block);
+                let else_value = self.codegen_helper(&if_struct.els, argument_values);
+                self.builder
+                    .build_unconditional_branch(post_dominator_block);
+
+                self.builder.position_at_end(post_dominator_block);
+
+                let phi_value = match typed_ast.ty {
+                    Type::Boolean => self
+                        .builder
+                        .build_phi(self.context.bool_type(), "lamb_phi_bool"),
+                    Type::Number => self
+                        .builder
+                        .build_phi(self.context.i64_type(), "lamb_phi_int"),
+                    Type::Function { .. } => self
+                        .builder
+                        .build_phi(self.llvm_basic_type(&typed_ast.ty), "lamb_hi_bool"),
+                };
+                phi_value.add_incoming(&[(&then_value, then_block), (&else_value, else_block)]);
+                phi_value.as_basic_value()
             }
-            TypedASTEnum::Identifier(_) => unimplemented!(),
+            TypedASTEnum::Identifier(identifier) => *argument_values.get(identifier).unwrap(),
             TypedASTEnum::FunctionApplication(function_application) => {
                 let function_pointer = self
-                    .codegen(&function_application.function)
+                    .codegen_helper(&function_application.function, argument_values)
                     .into_pointer_value();
-                let argument = self.codegen(&function_application.argument);
+                let argument = self.codegen_helper(&function_application.argument, argument_values);
                 self.builder
                     .build_call(
                         CallableValue::try_from(function_pointer).unwrap(),
                         &[argument.into()],
-                        "tlc_function_call",
+                        "lamb_function_call",
                     )
                     .try_as_basic_value()
                     .unwrap_left()
             }
             TypedASTEnum::FunctionDefinition(function_definition) => {
+                let previous_basic_block = self.builder.get_insert_block().unwrap();
+
                 let function_type = self.function_prototype(
-                    &function_definition.return_type,
                     &function_definition.argument_type,
+                    &function_definition.return_type,
                 );
                 let function_value = self
                     .module
-                    .add_function("tlc_function", function_type, None);
+                    .add_function("lamb_function", function_type, None);
 
-                let function_entry_basic_block =
-                    self.context.append_basic_block(function_value, "entry");
+                let function_entry_basic_block = self
+                    .context
+                    .append_basic_block(function_value, "lamb_function_entry");
                 self.builder.position_at_end(function_entry_basic_block);
 
-                let return_value = self.codegen(&function_definition.body);
+                argument_values.insert(
+                    function_definition.argument_name.clone(),
+                    function_value.get_first_param().unwrap(),
+                );
+                let return_value = self.codegen_helper(&function_definition.body, argument_values);
                 self.builder.build_return(Some(&return_value));
+                argument_values
+                    .remove(&function_definition.argument_name)
+                    .unwrap();
+
+                    self.builder.position_at_end(previous_basic_block);
+
+                function_value.verify(false);
 
                 function_value.as_global_value().as_pointer_value().into()
             }
             TypedASTEnum::RecursiveFunction(recursive_function) => {
                 let function_type = self.function_prototype(
-                    &recursive_function.return_type,
                     &recursive_function.argument_type,
+                    &recursive_function.return_type,
                 );
                 let function_value = self.module.add_function(
                     &recursive_function.function_name,
@@ -151,12 +216,26 @@ impl<'ctx> CodeGen<'ctx> {
                     None,
                 );
 
-                let function_entry_basic_block =
-                    self.context.append_basic_block(function_value, "entry");
+                let function_entry_basic_block = self
+                    .context
+                    .append_basic_block(function_value, "lamb_recursive_function_entry");
                 self.builder.position_at_end(function_entry_basic_block);
 
-                let return_value = self.codegen(&recursive_function.body);
+                argument_values.insert(
+                    recursive_function.function_name.clone(),
+                    function_value.as_global_value().as_pointer_value().into(),
+                );
+                argument_values.insert(
+                    recursive_function.argument_name.clone(),
+                    function_value.get_first_param().unwrap(),
+                );
+                let return_value = self.codegen_helper(&recursive_function.body, argument_values);
                 self.builder.build_return(Some(&return_value));
+                argument_values
+                    .remove(&recursive_function.argument_name)
+                    .unwrap();
+
+                function_value.verify(false);
 
                 self.builder.position_at_end(
                     function_value
@@ -165,15 +244,24 @@ impl<'ctx> CodeGen<'ctx> {
                         .get_last_basic_block()
                         .unwrap(),
                 );
-                self.codegen(&recursive_function.function_use)
+                let function_use_result_value = self.codegen(&recursive_function.function_use);
+                argument_values
+                    .remove(&recursive_function.function_name)
+                    .unwrap();
+
+                function_use_result_value
             }
         }
+    }
+
+    fn codegen(&mut self, typed_ast: &TypedAST) -> BasicValueEnum<'ctx> {
+        self.codegen_helper(typed_ast, &mut HashMap::new())
     }
 
     fn llvm_basic_type(&self, ty: &Type) -> BasicTypeEnum<'ctx> {
         match ty {
             Type::Number => self.context.i64_type().into(),
-            Type::Boolean => self.context.i8_type().into(),
+            Type::Boolean => self.context.bool_type().into(),
             Type::Function { argument, ret } => self
                 .llvm_basic_type(ret)
                 .fn_type(&[self.llvm_basic_type(argument).into()], false)

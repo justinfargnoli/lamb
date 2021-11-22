@@ -42,13 +42,13 @@ fn main() {
             let file = arg_matches
                 .value_of("file")
                 .expect("Argument <file> not found.");
-            println!("'{}' returns the type '{}'.", file, tlc::check(file));
+            println!("'{}' returns the type '{}'.", file, lamb::check(file));
         }
         ("compile", Some(arg_matches)) => {
             let file = arg_matches
                 .value_of("file")
                 .expect("Argument <file> not found.");
-            if let Err(llvm_string) = tlc::compile(file) {
+            if let Err(llvm_string) = lamb::compile(file) {
                 println!("{}", llvm_string);
             }
         }

@@ -1,17 +1,17 @@
 use core::panic;
 
-use tlc::type_check::Type;
+use lamb::type_check::Type;
 
 fn file_test_type(file_name: &str, expected_type: Type) {
-    assert_eq!(tlc::type_check(file_name), expected_type);
+    assert_eq!(lamb::type_check(file_name), expected_type);
 }
 
 fn file_test(file_name: &str, expected_type: Type, expected_result: u64) {
     if let Type::Function { .. } = expected_type {
         panic!();
     }
-    assert_eq!(tlc::type_check(file_name), expected_type);
-    assert_eq!(tlc::compile(file_name).unwrap(), expected_result);
+    assert_eq!(lamb::type_check(file_name), expected_type);
+    assert_eq!(lamb::compile(file_name).unwrap(), expected_result);
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn input_4() {
 #[test]
 #[should_panic]
 fn input_5() {
-    tlc::type_check("tests/inputs/input5.txt");
+    lamb::type_check("tests/inputs/input5.txt");
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn input_6() {
 #[test]
 #[should_panic]
 fn input_7() {
-    tlc::type_check("tests/inputs/input7.txt");
+    lamb::type_check("tests/inputs/input7.txt");
 }
 
 #[test]
@@ -81,13 +81,13 @@ fn input_10() {
 #[test]
 #[should_panic]
 fn input_11() {
-    tlc::type_check("tests/inputs/input11.txt");
+    lamb::type_check("tests/inputs/input11.txt");
 }
 
 #[test]
 #[should_panic]
 fn input_12() {
-    tlc::type_check("tests/inputs/input12.txt");
+    lamb::type_check("tests/inputs/input12.txt");
 }
 
 #[test]
@@ -127,6 +127,7 @@ fn input_super() {
 }
 
 #[test]
+#[should_panic]
 fn input_rec_c_summation() {
     file_test("tests/inputs/input_rec_c_summation.txt", Type::Number, 55);
 }
@@ -134,10 +135,11 @@ fn input_rec_c_summation() {
 #[test]
 #[should_panic]
 fn input_rec_c_fail() {
-    tlc::type_check("tests/inputs/input_rec_c_fail.txt");
+    lamb::type_check("tests/inputs/input_rec_c_fail.txt");
 }
 
 #[test]
+#[should_panic] 
 fn input_rec_c_factorial() {
     file_test("tests/inputs/input_rec_c_factorial.txt", Type::Number, 120);
 }

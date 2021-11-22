@@ -75,7 +75,7 @@ impl TypedAST {
         TypedAST::typer(ast, &mut HashMap::new())
     }
 
-    fn typer(ast: &AST, tenv: &mut HashMap<String, Type>) -> TypedAST {
+    fn typer(ast: &AST, type_enviroment: &mut HashMap<String, Type>) -> TypedAST {
         match ast {
             AST::TrueLiteral => TypedAST {
                 ty: Type::Boolean,
@@ -90,8 +90,8 @@ impl TypedAST {
                 ast: Box::new(TypedASTEnum::NumberLiteral(*number)),
             },
             AST::Plus(operand1, operand2) => {
-                let typed_ast1 = TypedAST::typer(operand1, tenv);
-                let typed_ast2 = TypedAST::typer(operand2, tenv);
+                let typed_ast1 = TypedAST::typer(operand1, type_enviroment);
+                let typed_ast2 = TypedAST::typer(operand2, type_enviroment);
 
                 if typed_ast1.ty != Type::Number || typed_ast2.ty != Type::Number {
                     panic!("Types differ in PlusC!")
@@ -103,8 +103,8 @@ impl TypedAST {
                 }
             }
             AST::Multiply(operand1, operand2) => {
-                let typed_ast1 = TypedAST::typer(operand1, tenv);
-                let typed_ast2 = TypedAST::typer(operand2, tenv);
+                let typed_ast1 = TypedAST::typer(operand1, type_enviroment);
+                let typed_ast2 = TypedAST::typer(operand2, type_enviroment);
 
                 if typed_ast1.ty != Type::Number || typed_ast2.ty != Type::Number {
                     panic!("Types differ in MultC!")
@@ -116,8 +116,8 @@ impl TypedAST {
                 }
             }
             AST::Equals(operand1, operand2) => {
-                let typed_ast1 = TypedAST::typer(operand1, tenv);
-                let typed_ast2 = TypedAST::typer(operand2, tenv);
+                let typed_ast1 = TypedAST::typer(operand1, type_enviroment);
+                let typed_ast2 = TypedAST::typer(operand2, type_enviroment);
 
                 if let Type::Function { .. } = typed_ast1.ty {
                     panic!("EqC cannot compare type FunT")
@@ -133,13 +133,13 @@ impl TypedAST {
                 }
             }
             AST::If(if_struct) => {
-                let condition = TypedAST::typer(&if_struct.condition, tenv);
+                let condition = TypedAST::typer(&if_struct.condition, type_enviroment);
                 if condition.ty != Type::Boolean {
                     panic!("Condition in an if statement is not boolean!")
                 }
 
-                let then = TypedAST::typer(&if_struct.then, tenv);
-                let els = TypedAST::typer(&if_struct.els, tenv);
+                let then = TypedAST::typer(&if_struct.then, type_enviroment);
+                let els = TypedAST::typer(&if_struct.els, type_enviroment);
                 if then.ty != els.ty {
                     panic!("Types differ in then and else part of an if statement!")
                 }
@@ -154,23 +154,25 @@ impl TypedAST {
                 }
             }
             AST::Identifier(identifier) => {
-                if !tenv.contains_key(identifier) {
+                if !type_enviroment.contains_key(identifier) {
                     panic!("Variable not saved in type environment")
                 }
 
                 TypedAST {
-                    ty: tenv[identifier].clone(),
+                    ty: type_enviroment[identifier].clone(),
                     ast: Box::new(TypedASTEnum::Identifier(identifier.clone())),
                 }
             }
             AST::FunctionApplication(function_application_struct) => {
-                let function = TypedAST::typer(&function_application_struct.function, tenv);
+                let function =
+                    TypedAST::typer(&function_application_struct.function, type_enviroment);
                 match &function.ty {
                     Type::Function {
                         argument: function_argument_type,
                         ret,
                     } => {
-                        let argument = TypedAST::typer(&function_application_struct.argument, tenv);
+                        let argument =
+                            TypedAST::typer(&function_application_struct.argument, type_enviroment);
                         if **function_argument_type != argument.ty {
                             panic!("Argument type doesn't match declared type")
                         }
@@ -186,12 +188,12 @@ impl TypedAST {
                 }
             }
             AST::FunctionDefinition(function_definition_struct) => {
-                tenv.insert(
+                type_enviroment.insert(
                     function_definition_struct.argument_name.clone(),
                     function_definition_struct.argument_type.clone(),
                 );
 
-                let body = TypedAST::typer(&function_definition_struct.body, tenv);
+                let body = TypedAST::typer(&function_definition_struct.body, type_enviroment);
                 if body.ty != function_definition_struct.return_type {
                     panic!("Body type doesn't match declared type")
                 }
@@ -200,7 +202,7 @@ impl TypedAST {
                  * Since the body has type checked we can remove the variable name form the scope to
                  * preserve a common understanding of scope. This allows us ot avoid cloning the HashMap.
                  */
-                tenv.remove(&function_definition_struct.argument_name);
+                type_enviroment.remove(&function_definition_struct.argument_name);
 
                 TypedAST {
                     ty: Type::Function {
@@ -216,29 +218,30 @@ impl TypedAST {
                 }
             }
             AST::RecursiveFunction(recursive_function_struct) => {
-                tenv.insert(
+                type_enviroment.insert(
                     recursive_function_struct.function_name.clone(),
                     Type::Function {
                         argument: Box::new(recursive_function_struct.argument_type.clone()),
                         ret: Box::new(recursive_function_struct.return_type.clone()),
                     },
                 );
-                tenv.insert(
+                type_enviroment.insert(
                     recursive_function_struct.argument_name.clone(),
                     recursive_function_struct.argument_type.clone(),
                 );
 
-                let body = TypedAST::typer(&recursive_function_struct.body, tenv);
+                let body = TypedAST::typer(&recursive_function_struct.body, type_enviroment);
                 if recursive_function_struct.return_type != body.ty {
                     panic!(
                         "Return type of recursive function does not match return type of the body!"
                     );
                 }
 
-                let function_use = TypedAST::typer(&recursive_function_struct.function_use, tenv);
+                let function_use =
+                    TypedAST::typer(&recursive_function_struct.function_use, type_enviroment);
 
-                tenv.remove(&recursive_function_struct.function_name);
-                tenv.remove(&recursive_function_struct.argument_name);
+                type_enviroment.remove(&recursive_function_struct.function_name);
+                type_enviroment.remove(&recursive_function_struct.argument_name);
 
                 TypedAST {
                     ty: function_use.ty.clone(),
