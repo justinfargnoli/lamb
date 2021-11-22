@@ -119,20 +119,18 @@ impl<'ctx> CodeGen<'ctx> {
                     self.builder.get_insert_block().unwrap(),
                     "lamb_then_block",
                 );
-                let else_block = self.context.insert_basic_block_after(
-                    then_block,
-                    "lamb_else_block",
-                );
+                let else_block = self
+                    .context
+                    .insert_basic_block_after(then_block, "lamb_else_block");
                 self.builder.build_conditional_branch(
                     condition.into_int_value(),
                     then_block,
                     else_block,
                 );
 
-                let post_dominator_block = self.context.insert_basic_block_after(
-                    else_block,
-                    "lamb_post_dominator_block",
-                );
+                let post_dominator_block = self
+                    .context
+                    .insert_basic_block_after(else_block, "lamb_post_dominator_block");
 
                 self.builder.position_at_end(then_block);
                 let then_value = self.codegen_helper(&if_struct.then, argument_values);
@@ -159,18 +157,19 @@ impl<'ctx> CodeGen<'ctx> {
                         .builder
                         .build_phi(self.llvm_basic_type(&typed_ast.ty), "lamb_hi_bool"),
                 };
-                phi_value.add_incoming(&[(&then_value, then_post_dominator_block), (&else_value, else_post_dominator_block)]);
+                phi_value.add_incoming(&[
+                    (&then_value, then_post_dominator_block),
+                    (&else_value, else_post_dominator_block),
+                ]);
                 phi_value.as_basic_value()
             }
-            TypedASTEnum::Identifier(identifier) => {
-                match argument_values.get(identifier) {
-                    Some(basic_value_enum) => *basic_value_enum,
-                    None => {
-                        self.module.print_to_stderr();
-                        panic!("identifier not found: ({})", identifier)
-                    }
+            TypedASTEnum::Identifier(identifier) => match argument_values.get(identifier) {
+                Some(basic_value_enum) => *basic_value_enum,
+                None => {
+                    self.module.print_to_stderr();
+                    panic!("identifier not found: ({})", identifier)
                 }
-            }
+            },
             TypedASTEnum::FunctionApplication(function_application) => {
                 let function_pointer = self
                     .codegen_helper(&function_application.function, argument_values)
