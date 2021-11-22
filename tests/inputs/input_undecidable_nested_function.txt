@@ -1,0 +1,26 @@
+appC(
+  fdC(
+    "outer_argument",
+    boolT,    
+    boolT,
+    appC(
+      ifC(
+        idC("outer_argument"),
+        fdC(
+          "inner_argument",
+          boolT, 
+          boolT,
+          idC("inner_argument")
+        ),
+        fdC(
+          "inner_argument",
+          boolT, 
+          boolT,
+          idC("inner_argument")
+        )
+      ),
+      falseC
+    )
+  ),
+  trueC
+)
