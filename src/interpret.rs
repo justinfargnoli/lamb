@@ -60,9 +60,9 @@ fn interpreter(ast: &AST, map: &mut HashMap<String, Vec<Data>>) -> Data {
             let rhs_data = interpreter(rhs, map);
 
             if let Data::Function(_) = lhs_data {
-                panic!()
+                panic!("First argument to EqC is a FunT")
             } else if let Data::Function(_) = rhs_data {
-                panic!()
+                panic!("Second argument to EqC is a FunT")
             } else {
                 Data::Boolean(lhs_data == rhs_data)
             }

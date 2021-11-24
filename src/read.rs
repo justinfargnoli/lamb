@@ -1,60 +1,30 @@
-use std::collections::VecDeque;
 use std::fs::File;
-use std::io::{Read, Result};
+use std::io::Read;
 
-pub fn build(input_file: &str) -> Result<VecDeque<char>> {
-    Result::Ok(
-        File::open(input_file)?
-            .bytes()
-            .map(|byte| byte.unwrap() as char)
-            .collect(),
-    )
+pub fn build(input_file: &str) -> String {
+    let mut code = String::new();
+    File::open(input_file)
+        .unwrap()
+        .read_to_string(&mut code)
+        .unwrap();
+    code
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn test(input_file: &str, expected: &str) {
+        let code_string = build(input_file);
+        assert!(code_string.chars().eq(expected.chars()))
+    }
+
     #[test]
     fn read_input_1() {
-        let mut character_iter = build("tests/inputs/number_literal.txt")
-            .expect("Unable to open file")
-            .into_iter();
-        assert_eq!(character_iter.next().unwrap(), 'n');
-        assert_eq!(character_iter.next().unwrap(), 'u');
-        assert_eq!(character_iter.next().unwrap(), 'm');
-        assert_eq!(character_iter.next().unwrap(), 'C');
-        assert_eq!(character_iter.next().unwrap(), '(');
-        assert_eq!(character_iter.next().unwrap(), '2');
-        assert_eq!(character_iter.next().unwrap(), ')');
+        test("tests/inputs/number_literal.txt", "numC(2)");
     }
     #[test]
     fn read_input_2() {
-        let mut character_iter = build("tests/inputs/plus.txt")
-            .expect("Unable to open file")
-            .into_iter();
-        assert_eq!(character_iter.next().unwrap(), 'p');
-        assert_eq!(character_iter.next().unwrap(), 'l');
-        assert_eq!(character_iter.next().unwrap(), 'u');
-        assert_eq!(character_iter.next().unwrap(), 's');
-        assert_eq!(character_iter.next().unwrap(), 'C');
-        assert_eq!(character_iter.next().unwrap(), '(');
-        assert_eq!(character_iter.next().unwrap(), 'n');
-        assert_eq!(character_iter.next().unwrap(), 'u');
-        assert_eq!(character_iter.next().unwrap(), 'm');
-        assert_eq!(character_iter.next().unwrap(), 'C');
-        assert_eq!(character_iter.next().unwrap(), '(');
-        assert_eq!(character_iter.next().unwrap(), '1');
-        assert_eq!(character_iter.next().unwrap(), ')');
-        assert_eq!(character_iter.next().unwrap(), ',');
-        assert_eq!(character_iter.next().unwrap(), ' ');
-        assert_eq!(character_iter.next().unwrap(), 'n');
-        assert_eq!(character_iter.next().unwrap(), 'u');
-        assert_eq!(character_iter.next().unwrap(), 'm');
-        assert_eq!(character_iter.next().unwrap(), 'C');
-        assert_eq!(character_iter.next().unwrap(), '(');
-        assert_eq!(character_iter.next().unwrap(), '2');
-        assert_eq!(character_iter.next().unwrap(), ')');
-        assert_eq!(character_iter.next().unwrap(), ')');
+        test("tests/inputs/plus.txt", "plusC(numC(1), numC(2))");
     }
 }

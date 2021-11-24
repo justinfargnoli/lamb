@@ -120,9 +120,9 @@ impl TypedAST {
                 let typed_ast2 = TypedAST::typer(operand2, type_enviroment);
 
                 if let Type::Function { .. } = typed_ast1.ty {
-                    panic!("EqC cannot compare type FunT")
+                    panic!("First argument to EqC is a FunT")
                 } else if let Type::Function { .. } = typed_ast2.ty {
-                    panic!("EqC cannot compare type FunT")
+                    panic!("Second argument to EqC is a FunT")
                 } else if typed_ast1.ty != typed_ast2.ty {
                     panic!("Types differ in EqC!")
                 }

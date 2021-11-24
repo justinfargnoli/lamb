@@ -7,7 +7,7 @@ use lamb::{
     tokenize::{self, TokenStream},
     type_check::{Type, TypedAST},
 };
-use std::{collections::VecDeque, convert::TryInto};
+use std::convert::TryInto;
 
 enum TestOptions {
     Parse,
@@ -75,12 +75,12 @@ fn test_to_file_name(test_name: &str) -> String {
     file_name
 }
 
-fn test_read(name: &str) -> VecDeque<char> {
-    read::build(test_to_file_name(name).as_str()).unwrap()
+fn test_read(name: &str) -> String {
+    read::build(test_to_file_name(name).as_str())
 }
 
 fn test_tokenizer(name: &str) -> TokenStream {
-    let character_stream = test_read(name);
+    let character_stream = test_read(name).chars().collect();
     tokenize::TokenStream::build(character_stream)
 }
 
