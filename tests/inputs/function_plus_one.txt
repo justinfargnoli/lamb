@@ -1,0 +1,9 @@
+fdC(
+  "x", 
+  numT, 
+  numT, 
+  plusC(
+    idC("x"), 
+    numC(1)
+  )
+)

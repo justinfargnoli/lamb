@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn read_input_1() {
-        let mut character_iter = build("tests/inputs/input1.txt")
+        let mut character_iter = build("tests/inputs/number_literal.txt")
             .expect("Unable to open file")
             .into_iter();
         assert_eq!(character_iter.next().unwrap(), 'n');
@@ -30,7 +30,7 @@ mod tests {
     }
     #[test]
     fn read_input_2() {
-        let mut character_iter = build("tests/inputs/input2.txt")
+        let mut character_iter = build("tests/inputs/plus.txt")
             .expect("Unable to open file")
             .into_iter();
         assert_eq!(character_iter.next().unwrap(), 'p');

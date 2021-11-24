@@ -48,8 +48,9 @@ fn main() {
             let file = arg_matches
                 .value_of("file")
                 .expect("Argument <file> not found.");
-            if let Err(llvm_string) = lamb::compile(file) {
-                println!("{}", llvm_string);
+            match lamb::compile(file) {
+                Ok(result) => println!("{}", result),
+                Err(error_string) => println!("{}", error_string),
             }
         }
         ("interpret", Some(_)) => unimplemented!(),

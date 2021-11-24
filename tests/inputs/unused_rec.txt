@@ -1,0 +1,8 @@
+recC(
+	"S",
+	"num", 
+	numT, 
+	numT, 
+	idC("num"),
+	trueC
+)

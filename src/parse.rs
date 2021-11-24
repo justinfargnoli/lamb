@@ -1,7 +1,7 @@
 use super::type_check::Type;
 use crate::tokenize::{Token, TokenStream};
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum AST {
     NumberLiteral(i64),
     Plus(Box<AST>, Box<AST>),
@@ -16,20 +16,20 @@ pub enum AST {
     RecursiveFunction(RecursiveFunction),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct If {
     pub condition: Box<AST>,
     pub then: Box<AST>,
     pub els: Box<AST>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct FunctionApplication {
     pub function: Box<AST>,
     pub argument: Box<AST>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct FunctionDefinition {
     pub argument_name: String,
     pub argument_type: Type,
@@ -37,7 +37,7 @@ pub struct FunctionDefinition {
     pub body: Box<AST>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct RecursiveFunction {
     pub function_name: String,
     pub argument_name: String,

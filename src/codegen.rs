@@ -166,7 +166,6 @@ impl<'ctx> CodeGen<'ctx> {
             TypedASTEnum::Identifier(identifier) => match argument_values.get(identifier) {
                 Some(basic_value_enum) => *basic_value_enum,
                 None => {
-                    self.module.print_to_stderr();
                     panic!("identifier not found: ({})", identifier)
                 }
             },
